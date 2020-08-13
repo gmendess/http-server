@@ -16,6 +16,7 @@
 #include <netdb.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <string.h>
 #include "server.h"
 #include "../util/util.h"
 
@@ -44,12 +45,6 @@ static int create_socket_and_bind(struct addrinfo* ai) {
       perror("new_http_server: bind");
       continue;
     }
-
-    // coloca o socket em estado de listening, escutando por requição de conexão
-    if(listen(listener, BACKLOG) == -1) {
-      perror("new_http_server: listen");
-      continue;
-    }
     
     // se chegar até aqui, foi possível adquirir um socket e dar bind, encerra o loop
     break;
@@ -61,6 +56,30 @@ static int create_socket_and_bind(struct addrinfo* ai) {
   
   // sucesso
   return listener;
+}
+
+/*
+  Função responsável por lidar com a requisição de um cliente
+
+  @param clientfd: file descriptor para se comunicar com o cliente
+*/
+static void handle_request(int clientfd) {
+  // processo filho
+  char buffer[1024] = {0};
+  recv(clientfd, buffer, sizeof(buffer), 0);
+  puts(buffer);
+
+  char* resp = {
+    "HTTP/1.1 200 OK\n"\
+    "Content-Type: text/xml\n"\
+    "Content-Length: 50\n\n"\
+    "<person><name>Gabriel</name><age>19</age></person>"\
+  };
+
+  if(send(clientfd, resp, strlen(resp), 0) == -1)
+    perror("send");
+
+  exit(EXIT_SUCCESS);
 }
 
 int new_http_server(const char* addr, const char* port) {
@@ -87,4 +106,43 @@ int new_http_server(const char* addr, const char* port) {
     errno_panic("new_http_server: create_socket_and_bind");
 
   return listener;
+}
+
+/*
+  Inicia o processo de escuta por requisição, programa entra em loop infinito esperando
+  por conexões.
+
+  @param listener: file descriptor do servidor; retornado por new_http_server 
+*/
+void start_listening(int listener) {
+  // coloca o socket em estado de listening, escutando por requição de conexão
+  if(listen(listener, BACKLOG) == -1)
+    errno_panic("start_listening: listen");
+
+  // loop infinito para ficar aceitando por requisições
+  while(1) {
+    struct sockaddr_storage ss;
+    unsigned size = sizeof(ss);
+
+    int clientfd = accept(listener, (struct sockaddr*) &ss, &size);
+    if(clientfd == -1) {
+      perror("accept");
+      exit(EXIT_FAILURE);
+    }
+
+    pid_t pid = fork();
+    if(pid == 0) {
+      // processo filho
+      close(listener);
+      handle_request(clientfd);
+    }
+    else if(pid > 0) {
+      // processo pai
+      close(clientfd);
+      puts("Requisição aceita!");
+    }
+    else
+      perror("fork");
+
+  }
 }
