@@ -1,13 +1,15 @@
 #ifndef __HTTP_REQUEST_H
 #define __HTTP_REQUEST_H
 
+#include "../methods/methods.h"
+
 /*
   Estrutura que contém informações sobre a requisição HTTP feita por um cliente
 */
 typedef struct request {
-  char* method;  // método HTTP (ex.: POST, GET, DELETE etc)
-  char* path;    // caminho do recurso que está sendo requisitado (ex.: /admin/login/)
-  char* version; // versão do protocolo (ex.: HTTP/1.1)
+  http_method_t method;  // método HTTP (ex.: POST, GET, DELETE etc)
+  char* path;            // caminho do recurso que está sendo requisitado (ex.: /admin/login/)
+  char* version;         // versão do protocolo (ex.: HTTP/1.1)
 } request_t;
 
 
