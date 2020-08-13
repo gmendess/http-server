@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "request.h"
+#include "../methods/methods.h"
 
 /*
   Faz parse da Request-line de uma requisição http e salva as informações em
@@ -14,8 +15,8 @@ char* parse_request_line(char* req_msg, request_t *const req) {
   char* token = NULL;
 
   token = strtok(req_msg, " \r\n");
-  req->method = token;
-
+  req->method = get_http_method(token);
+  
   token = strtok(NULL, " \r\n");
   req->path = token;
 
