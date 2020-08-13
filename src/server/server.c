@@ -75,11 +75,10 @@ static void handle_request(int clientfd) {
 
   request_t req = {0};
   parse_request_line(lines[0], &req);
-  printf("Method: \"%s\"\n", req.method);
+  printf("Method: \"%s\"\n", req.method.name);
+  printf("Method code: \"%d\"\n", req.method.code);
   printf("Path: \"%s\"\n", req.path);
   printf("Version: \"%s\"\n", req.version);
-  
-  getchar();
 
   // char* resp = {
   //   "HTTP/1.1 200 OK\n"\
