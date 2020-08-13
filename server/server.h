@@ -14,4 +14,12 @@
 */
 int new_http_server(const char* addr, const char* port);
 
+/*
+  Inicia o processo de escuta por requisição, programa entra em loop infinito esperando
+  por conexões.
+
+  @param listener: file descriptor do servidor; retornado por new_http_server 
+*/
+void start_listening(int listener);
+
 #endif // __HTTP_SERVER_H
