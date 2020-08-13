@@ -54,6 +54,11 @@ int char_counter(char* buffer, char c) {
   return counter;
 }
 
+/*
+  Cria e retorna uma cópia de um buffer
+
+  @param buffer: buffer que será copiado
+*/
 char* make_copy(char* buffer) {
   size_t len = strlen(buffer) + 1;
   
@@ -63,4 +68,40 @@ char* make_copy(char* buffer) {
 
   memcpy(copy, buffer, len);
   return copy;
+}
+
+/*
+  Sepera o conteúdo de um buffer em várias linhas; retorna a quantidade de strings contidas em @str_array
+
+  @param buffer: buffer de caracteres que sofrerá o parser de linha
+  @param str_array: ponteiro para vetor de strings que conterá as linhas 'parseadas' de @buffer
+  @param lines: uma "dica" de quantas linhas é possível que @buffer tenha (0 se não souber).
+*/
+int parse_lines(char* buffer, char*** str_array, int lines) {
+  if(str_array == NULL)
+    return -1;
+
+  if(lines == 0)
+    lines = 1;
+
+  *str_array = calloc(lines, sizeof(char*));
+  if(*str_array == NULL)
+    errno_panic("parse_lines: calloc");
+  
+  char* token = strtok(buffer, "\r\n");
+  int curr_line = 0;
+  while(token) {
+    if(lines == curr_line) {
+      lines++;
+      *str_array = realloc(*str_array, lines * sizeof(char*));
+      if(*str_array == NULL)
+        errno_panic("parse_lines: realloc");
+    }
+
+    (*str_array)[curr_line] = make_copy(token);
+    curr_line++;
+    token = strtok(NULL, "\r\n");
+  }
+
+  return curr_line;
 }
