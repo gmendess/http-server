@@ -19,6 +19,7 @@
 #include <string.h>
 #include "server.h"
 #include "../util/util.h"
+#include "../http/request/request.h"
 
 static int create_socket_and_bind(struct addrinfo* ai) {
   int listener = 0; // file descriptor do socket do servidor; retornado pela função
@@ -67,17 +68,28 @@ static void handle_request(int clientfd) {
   // processo filho
   char buffer[1024] = {0};
   recv(clientfd, buffer, sizeof(buffer), 0);
-  puts(buffer);
 
-  char* resp = {
-    "HTTP/1.1 200 OK\n"\
-    "Content-Type: text/xml\n"\
-    "Content-Length: 50\n\n"\
-    "<person><name>Gabriel</name><age>19</age></person>"\
-  };
+  int counter = char_counter(buffer, '\n');
+  char** lines = NULL;
+  counter = parse_lines(buffer, &lines, counter);
 
-  if(send(clientfd, resp, strlen(resp), 0) == -1)
-    perror("send");
+  request_t req = {0};
+  parse_request_line(lines[0], &req);
+  printf("Method: \"%s\"\n", req.method);
+  printf("Path: \"%s\"\n", req.path);
+  printf("Version: \"%s\"\n", req.version);
+  
+  getchar();
+
+  // char* resp = {
+  //   "HTTP/1.1 200 OK\n"\
+  //   "Content-Type: text/xml\n"\
+  //   "Content-Length: 50\n\n"\
+  //   "<person><name>Gabriel</name><age>19</age></person>"\
+  // };
+
+  // if(send(clientfd, resp, strlen(resp), 0) == -1)
+  //   perror("send");
 
   exit(EXIT_SUCCESS);
 }
