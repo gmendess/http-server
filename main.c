@@ -21,22 +21,7 @@
 int main() {
   
   int listener = new_http_server("0.0.0.0", "http");
-
-  struct sockaddr_storage ss;
-  int size = sizeof(ss);
-
-  int client = accept(listener, (struct sockaddr*) &ss, &size);
-  if(client == -1) {
-    perror("accept");
-    exit(EXIT_FAILURE);
-  }
-
-  char buffer[1024] = {0};
-  recv(client, buffer, sizeof(buffer), 0);
-  puts(buffer);
-
-  // enviando mensagem para o cliente
-  send(client, "<h1>Teste</h1>", 14, 0);
+  start_listening(listener);
 
   return 0;
 }
