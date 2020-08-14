@@ -70,30 +70,27 @@ static int create_socket_and_bind(struct addrinfo* ai) {
   @param clientfd: file descriptor para se comunicar com o cliente
 */
 static void handle_request(int clientfd) {
-  // processo filho
   char buffer[1024] = {0};
   recv(clientfd, buffer, sizeof(buffer), 0);
-
-  int counter = char_counter(buffer, '\n');
-  char** lines = NULL;
-  counter = parse_lines(buffer, &lines, counter);
+  char* copy = make_copy(buffer);
 
   request_t req = {0};
-  parse_request_line(lines[0], &req);
-  printf("Method: \"%s\"\n", req.method.name);
-  printf("Method code: \"%d\"\n", req.method.code);
-  printf("Path: \"%s\"\n", req.path);
-  printf("Version: \"%s\"\n", req.version);
+  parse_request(buffer, &req);
 
-  // char* resp = {
-  //   "HTTP/1.1 200 OK\n"\
-  //   "Content-Type: text/xml\n"\
-  //   "Content-Length: 50\n\n"\
-  //   "<person><name>Gabriel</name><age>19</age></person>"\
-  // };
+  puts("REQUEST LINE");
+  printf("\tMethod: %s\n", req.req_line.method.name);
+  printf("\tPath: %s\n", req.req_line.path);
+  printf("\tVersion: %s\n", req.req_line.version);
 
-  // if(send(clientfd, resp, strlen(resp), 0) == -1)
-  //   perror("send");
+  puts("\nHEADER");
+  for(int x = 0; x < req.header_counter; x++)
+    printf("\t%s\n", req.header[x]);
+  
+  puts("\nBODY");
+  puts(req.body);
+
+  puts("\n----------------------------\n");
+  puts(copy);
 
   exit(EXIT_SUCCESS);
 }
