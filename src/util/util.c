@@ -15,6 +15,9 @@
 
 #include <netdb.h>
 #include <string.h>
+#include <unistd.h>
+#include <signal.h>
+#include <sys/wait.h>
 #include <sys/socket.h>
 #include "util.h"
 
@@ -115,4 +118,21 @@ int parse_lines(char* buffer, char*** str_array, int lines) {
   }
 
   return curr_line;
+}
+
+/*
+  Recebe o SIGCHLD do processo filho, evitando que ele se torne zumbi. O while evita 
+  que SIGCHLDs sejam ignorados caso eles cheguem enquanto outro estiver sendo tratado. 
+  Se waitpid retornar 0, significa que não há mais nenhum SIGCHLD a ser tratado nesse 
+  momento. Verifica, também, se o processo filho foi terminado por um SIGSEGV.
+
+  @param sig: número do sinal recebido
+*/
+void sigchld_handler(int sig) {
+  int status = 0; // status retornado por waitpid
+  while(waitpid(-1, &status, WNOHANG) > 0) {
+    // verifica se o processo filho foi terminado por um SIGSEGV
+    if(WIFSIGNALED(status) && WTERMSIG(status) == SIGSEGV)
+      write(2, "\nUm processo filho terminou devido SIGSEGV!\n", 44);
+  }
 }

@@ -49,4 +49,12 @@ char* make_copy(char* buffer);
 */
 int parse_lines(char* buffer, char*** str_array, int lines);
 
+/*
+  Recebe o SIGCHLD do processo filho, evitando que ele se torne zumbi.
+  Verifica, também, se o processo filho foi terminado por um SIGSEGV.
+
+  @param sig: número do sinal recebido
+*/
+void sigchld_handler(int sig);
+
 #endif // __HTTP_UTIL_H
