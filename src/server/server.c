@@ -13,7 +13,12 @@
 #define __USE_XOPEN2K
 #endif
 
+#ifndef __USE_XOPEN2K8
+#define __USE_XOPEN2K8
+#endif
+
 #include <netdb.h>
+#include <signal.h>
 #include <sys/socket.h>
 #include <unistd.h>
 #include <string.h>
@@ -130,26 +135,36 @@ void start_listening(int listener) {
   if(listen(listener, BACKLOG) == -1)
     errno_panic("start_listening: listen");
 
+  // configurando handler para SIGSEGV para que exiba uma mensagem de erro e encerre o programa,
+  // caso o sinal venha a ser recebido
+  struct sigaction sa = {0};
+  sa.sa_handler = sigchld_handler; // função handler do sinal
+  sa.sa_flags   = SA_RESTART;      // reinicia uma syscall que foi interrompida pelo sinal
+  sigemptyset(&sa.sa_mask);        // zera a máscara de sinais a serem bloqueados
+  sigaction(SIGCHLD, &sa, NULL);   // configura a ação a ser tomada ao receber um SIGCHLD
+
   // loop infinito para ficar aceitando por requisições
   while(1) {
     struct sockaddr_storage ss;
     unsigned size = sizeof(ss);
 
+    // aceita uma conexão com o cliente
     int clientfd = accept(listener, (struct sockaddr*) &ss, &size);
     if(clientfd == -1) {
       perror("accept");
       exit(EXIT_FAILURE);
     }
 
+    // cria um processo filho para lidar com a requisição
     pid_t pid = fork();
     if(pid == 0) {
       // processo filho
-      close(listener);
-      handle_request(clientfd);
+      close(listener); // fecha o socket do listener, pois o processo filho não precisa dele
+      handle_request(clientfd); // lida com a requisição
     }
     else if(pid > 0) {
       // processo pai
-      close(clientfd);
+      close(clientfd); // fecha o socket do cliente, pois o processo pai não precisa dele
       puts("Requisição aceita!");
     }
     else
