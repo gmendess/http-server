@@ -1,6 +1,8 @@
 #ifndef __HTTP_UTIL_H
 #define __HTTP_UTIL_H
 
+#include <arpa/inet.h>
+
 /*
   Exibe a mensagem de erro correspondente ao retorno de getaddrinfo e
   encerra o programa
@@ -56,5 +58,15 @@ int parse_lines(char* buffer, char*** str_array, int lines);
   @param sig: número do sinal recebido
 */
 void sigchld_handler(int sig);
+
+/*
+  Adquire o endereço e a porta de uma estrutura de endereço (sockaddr_in e sockaddr_in6)
+
+  @param sa: estrutura do endereço
+  @param port: ponteiro para inteiro que conterá a porta
+  @param buffer: buffer que conterá o IP em formato legível
+  @param len: tamanho de @buffer 
+*/
+void get_addr_and_port(struct sockaddr* sa, int* port, char* buffer, int len);
 
 #endif // __HTTP_UTIL_H

@@ -19,6 +19,7 @@
 #include <signal.h>
 #include <sys/wait.h>
 #include <sys/socket.h>
+#include <arpa/inet.h>
 #include "util.h"
 
 /*
@@ -134,5 +135,27 @@ void sigchld_handler(int sig) {
     // verifica se o processo filho foi terminado por um SIGSEGV
     if(WIFSIGNALED(status) && WTERMSIG(status) == SIGSEGV)
       write(2, "\nUm processo filho terminou devido SIGSEGV!\n", 44);
+  }
+}
+
+/*
+  Adquire o endereço IP e a porta de uma estrutura de endereço (sockaddr_in e sockaddr_in6)
+
+  @param sa: estrutura do endereço
+  @param port: ponteiro para inteiro que conterá a porta
+  @param buffer: buffer que conterá o IP em formato legível
+  @param len: tamanho de @buffer 
+*/
+void get_addr_and_port(struct sockaddr* sa, int* port, char* buffer, int len) {
+  // IPv4
+  if(sa->sa_family == AF_INET) {
+    inet_ntop(sa->sa_family, &((struct sockaddr_in*) sa)->sin_addr, buffer, len);
+    if(port)
+      *port = ntohs( ((struct sockaddr_in*) sa)->sin_port );
+  }
+  else { // IPv6
+    inet_ntop(sa->sa_family, &((struct sockaddr_in6*) sa)->sin6_addr, buffer, len);
+    if(port)
+      *port = ntohs( ((struct sockaddr_in6*) sa)->sin6_port );
   }
 }
