@@ -26,8 +26,8 @@
 #include "../util/util.h"
 #include "../http/request/request.h"
 
-static int create_socket_and_bind(struct addrinfo* ai) {
-  int listener = 0; // file descriptor do socket do servidor; retornado pela função
+static void bind_server(server_t* server, struct addrinfo* ai) {
+  int listener = 0; // file descriptor do socket do servidor
   
   // ponteiro auxiliar para percorrer a lista
   struct addrinfo* aux = NULL;
@@ -38,7 +38,7 @@ static int create_socket_and_bind(struct addrinfo* ai) {
     // tenta adquirir um socket com as configurações do endereço em 'aux'
     listener = socket(aux->ai_family, aux->ai_socktype, aux->ai_protocol);
     if(listener == -1) {
-      perror("new_http_server: socket");
+      perror("bind_server: socket");
       continue;
     }
 
@@ -48,7 +48,7 @@ static int create_socket_and_bind(struct addrinfo* ai) {
 
     // tenta dar bind no endereço contido em 'aux'
     if(bind(listener, aux->ai_addr, aux->ai_addrlen) == -1) {
-      perror("new_http_server: bind");
+      perror("bind_server: bind");
       continue;
     }
     
@@ -61,44 +61,50 @@ static int create_socket_and_bind(struct addrinfo* ai) {
 
   // se aux == NULL, cheguei ao final da lista sem conseguir criar o socket e dar bind
   if(aux == NULL)
-    return -1;
+    panic("bind_server", "não foi possível atribuir nenhum endereço ao servidor");
   
-  // sucesso
-  return listener;
+  get_addr_and_port(aux->ai_addr, &server->port, server->addr, sizeof(server->addr));
+  server->listener = listener;
 }
 
 /*
   Função responsável por lidar com a requisição de um cliente
 
+  @param server: informações do servidor
   @param clientfd: file descriptor para se comunicar com o cliente
 */
-static void handle_request(int clientfd) {
+static void handle_request(server_t* server, int clientfd) {
   char buffer[1024] = {0};
   recv(clientfd, buffer, sizeof(buffer), 0);
 
   request_t req = {0};
   parse_request(buffer, &req);
-  
-  puts("REQUEST LINE:");
-  printf("\t%s\n\t%s\n\t%s\n", 
-    req.req_line.method.name, req.req_line.path, req.req_line.version);
-
-  puts("\nFIRST HEADER FIELD:");
-  printf("%s: %s\n", req.header->name, req.header->value);
-
-  if(req.body) {
-    puts("\nBODY:");
-    printf("%s\n", req.body);
+  puts(req.req_line.path);
+  if(strcmp(req.req_line.path, server->route->path) == 0) {
+    if(req.req_line.method.code == server->route->m_code)
+      server->route->handler(clientfd, &req);
+    else
+      write(clientfd, "Metodo nao disponivel para essa rota!\n", 38);
+  }
+  else {
+    write(clientfd, "Pagina nao encontrada!\n", 23);
   }
 
   free_request(&req);
   exit(EXIT_SUCCESS);
 }
 
-int new_http_server(const char* addr, const char* port) {
+/*
+  Cria um novo servidor http
 
-  // file descriptor do socket do servidor; retornado pela função
-  int listener = 0;
+  @param server: estrutura que conterá informações do servidor
+  @param addr: endereço do servidor 
+  @param port: serviço (porta)
+*/
+void new_http_server(server_t* server, const char* addr, const char* port) {
+
+  // lista de rotas vazia
+  server->route = NULL;
 
   struct addrinfo hints = {0};
   hints.ai_family   = AF_UNSPEC;   // IPv4 ou IPv6
@@ -113,23 +119,19 @@ int new_http_server(const char* addr, const char* port) {
   if(err != 0)
     net_panic("new_http_server: getaddrinfo", err);
 
-  // adquire um socket já configurado para escutar por conexões
-  listener = create_socket_and_bind(ai);
-  if(listener == -1)
-    errno_panic("new_http_server: create_socket_and_bind");
-
-  return listener;
+  // associado o servidor com algum endereço disponível na lista 'ai'
+  bind_server(server, ai);
 }
 
 /*
   Inicia o processo de escuta por requisição, programa entra em loop infinito esperando
   por conexões.
 
-  @param listener: file descriptor do servidor; retornado por new_http_server 
+  @param server: estrutura server_t contendo informações do servidor a ser iniciado 
 */
-void start_listening(int listener) {
+void start_listening(server_t* server) {
   // coloca o socket em estado de listening, escutando por requição de conexão
-  if(listen(listener, BACKLOG) == -1)
+  if(listen(server->listener, BACKLOG) == -1)
     errno_panic("start_listening: listen");
 
   // configurando handler para SIGSEGV para que exiba uma mensagem de erro e encerre o programa,
@@ -146,7 +148,7 @@ void start_listening(int listener) {
     unsigned size = sizeof(ss);
 
     // aceita uma conexão com o cliente
-    int clientfd = accept(listener, (struct sockaddr*) &ss, &size);
+    int clientfd = accept(server->listener, (struct sockaddr*) &ss, &size);
     if(clientfd == -1) {
       perror("accept");
       exit(EXIT_FAILURE);
@@ -156,8 +158,8 @@ void start_listening(int listener) {
     pid_t pid = fork();
     if(pid == 0) {
       // processo filho
-      close(listener); // fecha o socket do listener, pois o processo filho não precisa dele
-      handle_request(clientfd); // lida com a requisição
+      close(server->listener); // fecha o socket do listener, pois o processo filho não precisa dele
+      handle_request(server, clientfd); // lida com a requisição
     }
     else if(pid > 0) {
       // processo pai
@@ -168,4 +170,42 @@ void start_listening(int listener) {
       perror("fork");
 
   }
+}
+
+/*
+  Adiciona um handler para um determinada rota do servidor
+
+  @param server: servidor que passará a lidar com a rota especificada em @route
+  @param route: nome da rota
+  @param handler: função handler que será executada quando um cliente acessar @route 
+  @param m_code: código do método HTTP (veja methods.h)
+*/
+void handle_route(server_t* server,
+                  const char* route,
+                  route_handler_t handler,
+                  http_method_code_t m_code) 
+{
+  // aloca memória para um route_t
+  route_t* new_route = calloc(1, sizeof(route_t));
+  if(!new_route)
+    errno_panic("handle_route: calloc");
+
+  // configurando route_t
+  new_route->path    = route;
+  new_route->handler = handler;
+  new_route->m_code  = m_code;
+  
+  // percorre a lista de rotas do server até chegar no final
+  route_t* aux  = server->route;
+  route_t* prev = NULL;
+  while(aux) {
+    prev = aux;
+    aux = aux->next;
+  }
+
+  // se prev for NULL, 'server' não possui nenhuma rota ainda
+  if(prev == NULL)
+    server->route = new_route;
+  else
+    prev->next = new_route;
 }
