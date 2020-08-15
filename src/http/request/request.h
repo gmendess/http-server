@@ -68,4 +68,11 @@ char* get_request_body(char* req_buffer);
 */
 void parse_request_header(char** header_lines, int len, request_field_t** field);
 
+/*
+  Libera a memória de um request_t
+
+  @param req: request_t que terá memória de seus membros liberados
+*/
+void free_request(request_t* req);
+
 #endif // __HTTP_REQUEST_H

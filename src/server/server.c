@@ -56,6 +56,9 @@ static int create_socket_and_bind(struct addrinfo* ai) {
     break;
   }
 
+  // não preciso mais de 'ai', libero sua memória
+  freeaddrinfo(ai);
+
   // se aux == NULL, cheguei ao final da lista sem conseguir criar o socket e dar bind
   if(aux == NULL)
     return -1;
@@ -80,6 +83,7 @@ static void handle_request(int clientfd) {
     printf("%s: %s\n", temp->name, temp->value);
   }
 
+  free_request(&req);
   exit(EXIT_SUCCESS);
 }
 

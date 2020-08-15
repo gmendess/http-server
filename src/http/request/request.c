@@ -6,6 +6,39 @@
 #include "../../util/util.h"
 
 /*
+  Libera a memória de um header_lines
+
+  @param header_lines: vetor de strings que terá memória liberada
+  @param len: tamanho do vetor @header_lines
+*/
+static void free_header_lines(char** header_lines, int len) {
+  for(int i = 0; i < len; i++)
+    free(header_lines[i]);
+  free(header_lines);
+}
+
+/*
+  Libera a memória de um request_t
+
+  @param req: request_t que terá memória de seus membros liberados
+*/
+void free_request(request_t* req) {
+  free(req->body);
+  free(req->req_line.path);
+  free(req->req_line.version);
+
+  request_field_t* aux = req->header;
+  request_field_t* save_next = NULL;
+  while(aux) {
+    save_next = aux->next;
+    free(aux->name);
+    free(aux->value);
+    free(aux);
+    aux = save_next;
+  }
+}
+
+/*
   Faz parse da Request-line de uma requisição http e salva as informações em
   uma request_line_t.
 
@@ -23,12 +56,12 @@ void parse_request_line(char* req_buffer, request_line_t *const req_line) {
   token = strtok(NULL, " \r\n"); // path
   if(token == NULL)
     panic("parse_request_line", "path não pode ser nulo!");
-  req_line->path = token;
+  req_line->path = make_copy(token);
 
   token = strtok(NULL, " \r\n"); // versão do protocolo HTTP
   if(token == NULL)
     panic("parse_request_line", "versão do protocolo inválida!");
-  req_line->version = token;
+  req_line->version = make_copy(token);
 
 }
 
@@ -43,13 +76,14 @@ void parse_request(char* req_buffer, request_t* const req) {
   char** header_lines = NULL;
   counter = parse_lines(req_buffer, &header_lines, counter);
 
-  char* req_line = *header_lines;
-  header_lines++; // incrementa header_lines para retirar a request line
-  counter--; // decrementa counter pois header_lines foi diminuido em 1
+  char* req_line = header_lines[0];
   parse_request_line(req_line, &req->req_line);
   
   // faz parse em header_lines populando a lista encadeada em req->header
-  parse_request_header(header_lines, counter, &req->header);
+  parse_request_header(header_lines + 1, counter - 1, &req->header);
+
+  // libera memória do vetor de strings
+  free_header_lines(header_lines, counter);
 }
 
 char* get_request_body(char* req_buffer) {
