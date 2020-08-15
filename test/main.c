@@ -16,10 +16,17 @@
 #include <netdb.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <string.h>
 #include "../src/server/server.h"
 
 void home_handler(int clientfd, request_t* req) {
-  write(clientfd, "Oi, essa eh a pagina /home/\n", 28);
+  char* resp = {
+    "HTTP/1.1 200 OK\n"\
+    "Content-Type: text/html\n"\
+    "Content-Length: 35\n\n"\
+    "<h1>Oi, essa eh a pagina /home/<h1>"\
+  };
+  write(clientfd, resp, strlen(resp));
 }
 
 int main() {
