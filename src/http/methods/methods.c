@@ -10,8 +10,11 @@ static const
 http_method_t methods[] = {
   {GET, "GET"},
   {POST, "POST"},
-  {DELETE, "DELETE"},
   {PUT, "PUT"},
+  {DELETE, "DELETE"},
+  {HEAD, "HEAD"},
+  {OPTIONS, "OPTIONS"},
+  {PATCH, "PATCH"},
   {NONE, NULL}
 };
 

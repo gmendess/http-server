@@ -7,8 +7,11 @@ typedef enum {
   NONE = 0, // não existe
   GET,
   POST,
+  PUT,
   DELETE,
-  PUT
+  HEAD,
+  OPTIONS,
+  PATCH
 } http_method_code_t;
 
 typedef struct {
