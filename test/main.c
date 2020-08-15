@@ -18,10 +18,18 @@
 #include <unistd.h>
 #include "../src/server/server.h"
 
+void home_handler(int clientfd, request_t* req) {
+  write(clientfd, "Oi, essa eh a pagina /home/\n", 28);
+}
+
 int main() {
   
-  int listener = new_http_server("0.0.0.0", "http");
-  start_listening(listener);
+  server_t server = {0};
+  new_http_server(&server, "0.0.0.0", "http");
+
+  handle_route(&server, "/home/", home_handler, GET);
+  
+  start_listening(&server);
 
   return 0;
 }
