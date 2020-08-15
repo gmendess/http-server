@@ -79,16 +79,14 @@ static void handle_request(server_t* server, int clientfd) {
 
   request_t req = {0};
   parse_request(buffer, &req);
-  puts(req.req_line.path);
-  if(strcmp(req.req_line.path, server->route->path) == 0) {
-    if(req.req_line.method.code == server->route->m_code)
-      server->route->handler(clientfd, &req);
-    else
-      write(clientfd, "Metodo nao disponivel para essa rota!\n", 38);
-  }
-  else {
+  
+  route_t* route = find_route(server, req.req_line.path);
+  if(route == NULL)
     write(clientfd, "Pagina nao encontrada!\n", 23);
-  }
+  else if(route->m_code == req.req_line.method.code)
+    route->handler(clientfd, &req);
+  else
+    write(clientfd, "Metodo nao disponivel para essa rota!\n", 38);
 
   free_request(&req);
   exit(EXIT_SUCCESS);
@@ -208,4 +206,21 @@ void handle_route(server_t* server,
     server->route = new_route;
   else
     prev->next = new_route;
+}
+
+/*
+  Procura uma rota de nome @path contida na lista de rotas do servidor
+  Retorna ponteiro para a rota ou NULL, caso não encontrada
+
+  @param server: servidor que será executada a busca pela rota
+  @param path: nome da rota
+*/
+route_t* find_route(server_t* server, const char* path) {
+  route_t* aux = server->route;
+  while(aux != NULL) {
+    if(strcmp(aux->path, path) == 0)
+      return aux;
+    aux = aux->next;
+  }
+  return NULL;
 }

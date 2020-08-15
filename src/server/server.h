@@ -56,4 +56,13 @@ void handle_route(server_t* server,
                   route_handler_t handler,
                   http_method_code_t m_code);
 
+/*
+  Procura uma rota de nome @path contida na lista de rotas do servidor
+  Retorna ponteiro para a rota ou NULL, caso não encontrada
+
+  @param server: servidor que será executada a busca pela rota
+  @param path: nome da rota
+*/
+route_t* find_route(server_t* server, const char* path);
+
 #endif // __HTTP_SERVER_H
