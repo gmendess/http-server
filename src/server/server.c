@@ -79,8 +79,16 @@ static void handle_request(int clientfd) {
   request_t req = {0};
   parse_request(buffer, &req);
   
-  for(request_field_t* temp = req.header; temp != NULL; temp = temp->next) {
-    printf("%s: %s\n", temp->name, temp->value);
+  puts("REQUEST LINE:");
+  printf("\t%s\n\t%s\n\t%s\n", 
+    req.req_line.method.name, req.req_line.path, req.req_line.version);
+
+  puts("\nFIRST HEADER FIELD:");
+  printf("%s: %s\n", req.header->name, req.header->value);
+
+  if(req.body) {
+    puts("\nBODY:");
+    printf("%s\n", req.body);
   }
 
   free_request(&req);
