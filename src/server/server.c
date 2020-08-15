@@ -80,13 +80,13 @@ static void handle_request(server_t* server, int clientfd) {
   request_t req = {0};
   parse_request(buffer, &req);
   
-  route_t* route = find_route(server, req.req_line.path);
+  route_t* route = find_route(server, req.req_line.path, req.req_line.method.code);
   if(route == NULL)
     write(clientfd, "Pagina nao encontrada!\n", 23);
-  else if(route->m_code == req.req_line.method.code)
-    route->handler(clientfd, &req);
-  else
+  else if(route == (route_t*) -1)
     write(clientfd, "Metodo nao disponivel para essa rota!\n", 38);
+  else
+    route->handler(clientfd, &req);
 
   free_request(&req);
   exit(EXIT_SUCCESS);
@@ -215,12 +215,22 @@ void handle_route(server_t* server,
   @param server: servidor que será executada a busca pela rota
   @param path: nome da rota
 */
-route_t* find_route(server_t* server, const char* path) {
+route_t* find_route(server_t* server, const char* path, http_method_code_t m_code) {
   route_t* aux = server->route;
+  route_t* route_found = NULL;
   while(aux != NULL) {
-    if(strcmp(aux->path, path) == 0)
-      return aux;
+    if(strcmp(aux->path, path) == 0) {
+      route_found = (route_t*) -1;
+      if(aux->m_code == m_code)
+        return aux; // rota encontrada
+    }
     aux = aux->next;
   }
+
+  // se a rota foi encontrada mas o método HTTP não corresponde, retorna (route_t*) -1
+  // XXX: tenho que melhorar isso ai, pq é meio gambiarra
+  if(route_found != NULL)
+    return route_found;
+
   return NULL;
 }

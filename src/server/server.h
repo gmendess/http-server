@@ -63,6 +63,6 @@ void handle_route(server_t* server,
   @param server: servidor que será executada a busca pela rota
   @param path: nome da rota
 */
-route_t* find_route(server_t* server, const char* path);
+route_t* find_route(server_t* server, const char* path, http_method_code_t m_code);
 
 #endif // __HTTP_SERVER_H
