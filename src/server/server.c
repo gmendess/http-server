@@ -80,7 +80,7 @@ static void handle_request(server_t* server, int clientfd) {
   request_t req = {0};
   parse_request(buffer, &req);
   
-  route_t* route = find_route(server, req.req_line.path, req.req_line.method.code);
+  route_t* route = find_route(server, req.req_line.path, req.req_line.method);
   if(route == NULL)
     write(clientfd, "Pagina nao encontrada!\n", 23);
   else if(route == (route_t*) -1)
@@ -181,7 +181,7 @@ void start_listening(server_t* server) {
 void handle_route(server_t* server,
                   const char* route,
                   route_handler_t handler,
-                  http_method_code_t m_code) 
+                  http_method_t   method) 
 {
   // aloca memória para um route_t
   route_t* new_route = calloc(1, sizeof(route_t));
@@ -191,7 +191,7 @@ void handle_route(server_t* server,
   // configurando route_t
   new_route->path    = route;
   new_route->handler = handler;
-  new_route->m_code  = m_code;
+  new_route->method  = method;
   
   // percorre a lista de rotas do server até chegar no final
   route_t* aux  = server->route;
@@ -215,13 +215,13 @@ void handle_route(server_t* server,
   @param server: servidor que será executada a busca pela rota
   @param path: nome da rota
 */
-route_t* find_route(server_t* server, const char* path, http_method_code_t m_code) {
+route_t* find_route(server_t* server, const char* path, http_method_t method) {
   route_t* aux = server->route;
   route_t* route_found = NULL;
   while(aux != NULL) {
     if(strcmp(aux->path, path) == 0) {
       route_found = (route_t*) -1;
-      if(aux->m_code == m_code)
+      if(aux->method == method)
         return aux; // rota encontrada
     }
     aux = aux->next;

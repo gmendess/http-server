@@ -50,7 +50,7 @@ void parse_request_line(char* req_buffer, request_line_t *const req_line) {
 
   token = strtok(req_buffer, " \r\n"); // método HTTP
   req_line->method = get_http_method(token);
-  if(req_line->method.code == NONE)
+  if(req_line->method == NONE)
     panic("parse_request_line: get_http_method", "método HTTP não suportado!");
 
   token = strtok(NULL, " \r\n"); // path

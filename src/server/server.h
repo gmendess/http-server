@@ -13,17 +13,17 @@
 typedef void(*route_handler_t)(int, request_t*);
 
 typedef struct __route_t {
-  const char* path;           // caminho especificado na requisição
-  http_method_code_t m_code;  // código do método (ver methods.h)
-  route_handler_t    handler; // handler da rota
-  struct __route_t*  next;    // próxima rota (NULL = fim da lista)
+  const char* path;          // caminho especificado na requisição
+  http_method_t     method;  // método http
+  route_handler_t   handler; // handler da rota
+  struct __route_t* next;    // próxima rota (NULL = fim da lista)
 } route_t;
 
 typedef struct {
-  int listener;    // file descriptor do servidor
+  int listener;   // file descriptor do servidor
   char addr[INET6_ADDRSTRLEN]; // endereço do servidor
-  int  port;       // porta do servidor
-  route_t* route;  // lista encadeada das rotas do servidor
+  int  port;      // porta do servidor
+  route_t* route; // lista encadeada das rotas do servidor
 } server_t;
 
 /*
@@ -49,12 +49,12 @@ void start_listening(server_t* server);
   @param server: servidor que passará a lidar com a rota especificada em @route
   @param route: nome da rota
   @param handler: função handler que será executada quando um cliente acessar @route 
-  @param m_code: código do método HTTP (veja methods.h)
+  @param method: método HTTP
 */
 void handle_route(server_t* server,
                   const char* route,
                   route_handler_t handler,
-                  http_method_code_t m_code);
+                  http_method_t   method);
 
 /*
   Procura uma rota de nome @path contida na lista de rotas do servidor
@@ -63,6 +63,6 @@ void handle_route(server_t* server,
   @param server: servidor que será executada a busca pela rota
   @param path: nome da rota
 */
-route_t* find_route(server_t* server, const char* path, http_method_code_t m_code);
+route_t* find_route(server_t* server, const char* path, http_method_t method);
 
 #endif // __HTTP_SERVER_H
