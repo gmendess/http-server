@@ -26,6 +26,13 @@
 #include "../util/util.h"
 #include "../http/request/request.h"
 
+/*
+  Percorre a lista encadeada @ai tentando criar um socket e associá-lo à algum endereço dessa lista
+
+  @param server: servidor que terá o socket associado à um endereço de @ai
+  @param ai: lista encadeada de endereços(retornada por getaddrinfo) em que um de seus endereços
+   será associado ao servidor 
+*/
 static void bind_server(server_t* server, struct addrinfo* ai) {
   int listener = 0; // file descriptor do socket do servidor
   
@@ -132,8 +139,7 @@ void start_listening(server_t* server) {
   if(listen(server->listener, BACKLOG) == -1)
     errno_panic("start_listening: listen");
 
-  // configurando handler para SIGSEGV para que exiba uma mensagem de erro e encerre o programa,
-  // caso o sinal venha a ser recebido
+  // configurando handler para SIGCHLD
   struct sigaction sa = {0};
   sa.sa_handler = sigchld_handler; // função handler do sinal
   sa.sa_flags   = SA_RESTART;      // reinicia uma syscall que foi interrompida pelo sinal

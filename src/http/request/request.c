@@ -65,6 +65,12 @@ void parse_request_line(char* req_buffer, request_line_t *const req_line) {
 
 }
 
+/*
+  Ponto de entrada para começar o parser da requisição
+
+  @param req_buffer: mensagem completa da requisição
+  @param req: estrutura que conterá cada informação da requisição
+*/
 void parse_request(char* req_buffer, request_t* const req) {
   // adquire o body da requisição (req_buffer passará a conter apenas o header caso exista um body)
   char* body = get_request_body(req_buffer);
@@ -86,6 +92,15 @@ void parse_request(char* req_buffer, request_t* const req) {
   free_header_lines(header_lines, counter);
 }
 
+/*
+  Analisa o buffer da requisição em busca de um body, se houver, retorna a string que o represeta,
+  caso contrário, retorna NULL
+
+  Obs: se houver um body, req_buffer será modificado, colocando um null character após o término
+  do header, separando o header do body
+
+  @param req_buffer: buffer da requisição
+*/
 char* get_request_body(char* req_buffer) {
   char* body = NULL;
   body = strstr(req_buffer, "\r\n\r\n");

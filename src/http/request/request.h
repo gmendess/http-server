@@ -4,12 +4,12 @@
 #include "../methods/methods.h"
 
 /*
-  Estrutura que contém informações sobre os campos de um header de uma requisição HTTP. Possui o
+  Estrutura que contém informações sobre os campos do header de uma requisição HTTP. Possui o
   membro 'next' para criar uma lista encadeada
 */
 typedef struct request_field {
-  char* name;            // nome do campo
-  char* value;           // valor
+  char* name;  // nome do campo
+  char* value; // valor
   struct request_field* next; // próximo request_field_t
 } request_field_t;
 
@@ -17,18 +17,18 @@ typedef struct request_field {
   Estrutura que contém informações sobre a request line de uma requisição HTTP
 */
 typedef struct request_line {
-  http_method_t method;  // método HTTP (ex.: POST, GET, DELETE etc)
-  char* path;            // caminho do recurso que está sendo requisitado (ex.: /admin/login/)
-  char* version;         // versão do protocolo (ex.: HTTP/1.1)
+  http_method_t method; // método HTTP (ex.: POST, GET, DELETE etc)
+  char* path;           // caminho do recurso que está sendo requisitado (ex.: /admin/login/)
+  char* version;        // versão do protocolo (ex.: HTTP/1.1)
 } request_line_t;
 
 /*
   Estrutura que contém informações sobre a requisição HTTP feita por um cliente
 */
 typedef struct request {
-  request_line_t    req_line;
-  request_field_t*  header;
-  char*  body;
+  request_line_t   req_line; // request line
+  request_field_t* header;   // lista encadeada de cada campo do header
+  char*  body;               // corpo da requisição (NULL se não houver)
 } request_t;
 
 /*

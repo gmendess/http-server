@@ -10,6 +10,8 @@
 /*
   Estrutura para ser usado no vetor 'methods'
   Contém um código do método http(ver methods.h) e o nome do método
+
+  Coloquei essa estrutura aqui para não ficar visível
 */
 struct __http_method {
   http_method_t code;
