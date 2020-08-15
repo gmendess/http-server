@@ -72,25 +72,13 @@ static int create_socket_and_bind(struct addrinfo* ai) {
 static void handle_request(int clientfd) {
   char buffer[1024] = {0};
   recv(clientfd, buffer, sizeof(buffer), 0);
-  char* copy = make_copy(buffer);
 
   request_t req = {0};
   parse_request(buffer, &req);
-
-  puts("REQUEST LINE");
-  printf("\tMethod: %s\n", req.req_line.method.name);
-  printf("\tPath: %s\n", req.req_line.path);
-  printf("\tVersion: %s\n", req.req_line.version);
-
-  puts("\nHEADER");
-  for(int x = 0; x < req.header_counter; x++)
-    printf("\t%s\n", req.header[x]);
   
-  puts("\nBODY");
-  puts(req.body);
-
-  puts("\n----------------------------\n");
-  puts(copy);
+  for(request_field_t* temp = req.header; temp != NULL; temp = temp->next) {
+    printf("%s: %s\n", temp->name, temp->value);
+  }
 
   exit(EXIT_SUCCESS);
 }
