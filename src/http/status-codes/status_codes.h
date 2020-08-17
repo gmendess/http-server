@@ -67,8 +67,18 @@ typedef enum {
   VariantAlsoNegotiates,
   InsufficientStorage,
   LoopDetected,
-  NotExtended = 510,
-  NetworkAuthenticationRequired = 511
+  BandwidthLimitExceeded,
+  NotExtended,
+  NetworkAuthenticationRequired
 } http_status_code_t;
+
+/*
+  Adquire a descrição de um código de status HTTP
+
+  ATENÇÃO: a string retornada não deve ser modificada!
+
+  @param status_code: código de status HTTP(ver http_status_code_t)
+*/
+const char* get_http_status_description(http_status_code_t status_code);
 
 #endif // __HTTP_CODES_H

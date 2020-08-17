@@ -89,8 +89,81 @@ char* server_error_codes[] = {
   "Variant Also Negotiates",         // 506
   "Insufficient Storage",            // 507
   "Loop Detected",                   // 508
-  NULL,
-  NULL,
+  "Bandwidth Limit Exceeded",        // 509
   "Not Extended",                    // 510
   "Network Authentication Required"  // 511
+};
+
+const char* get_info_code_description(int index) {
+  if(index >= 4)
+    return NULL;
+
+  return info_codes[index];
+}
+
+const char* get_success_code_description(int index) {
+  if(index == 26)
+    return success_codes[9]; // 226
+
+  if(index >= 9)
+    return NULL;
+
+  return success_codes[index];
+}
+
+const char* get_redirection_code_description(int index) {
+  if(index >= 9)
+    return NULL;
+
+  return redirection_codes[index];
+}
+
+const char* get_client_error_code_description(int index) {
+  if(index == 51)
+    return client_error_codes[32]; // 451
+
+  if(index >= 32)
+    return NULL;
+
+  return client_error_codes[index];
+}
+
+const char* get_server_error_code_description(int index) {
+  if(index >= 12)
+    return NULL;
+
+  return server_error_codes[index];
+}
+
+/*
+  Adquire a descrição de um código de status HTTP
+
+  ATENÇÃO: a string retornada não deve ser modificada!
+
+  @param status_code: código de status HTTP(ver http_status_code_t)
+*/
+const char* get_http_status_description(http_status_code_t status_code) {
+  if(status_code == 0)
+    return NULL;
+
+  int status_family = status_code / 100;
+
+  int index = status_code % 100;
+  if(index < 0)
+    return NULL;
+
+  switch(status_family) {
+    case 1:  // 1xx (Informacional)
+      return get_info_code_description(index);            break;
+    case 2:  // 2xx (Sucesso)
+      return get_success_code_description(index);         break;
+    case 3:  // 3xx (Redirecionamento)
+      return get_redirection_code_description(index);     break;
+    case 4:  // 4xx (Erro no cliente)
+      return get_client_error_code_description(index);    break;
+    case 5:  // 5xx (Erro no servidor)
+      return get_server_error_code_description(index);    break;
+    default: // família de código inválida
+      return NULL;
+  }
 }
