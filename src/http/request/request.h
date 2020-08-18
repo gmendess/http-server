@@ -1,7 +1,7 @@
 #ifndef __HTTP_REQUEST_H
 #define __HTTP_REQUEST_H
 
-#include "../methods/methods.h"
+#include "methods/methods.h"
 #include "../header/header.h"
 
 /*

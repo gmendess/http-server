@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "request.h"
-#include "../methods/methods.h"
+#include "methods/methods.h"
 #include "../../util/util.h"
 #include "../header/header.h"
 

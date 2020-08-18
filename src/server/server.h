@@ -2,7 +2,7 @@
 #define __HTTP_SERVER_H
 
 #include "../http/request/request.h"
-#include "../http/methods/methods.h"
+#include "../http/request/methods/methods.h"
 
 /*
   Fila de espera do socket; usado na syscall 'listen'
