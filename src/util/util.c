@@ -122,6 +122,18 @@ int parse_lines(char* buffer, char*** str_array, int lines) {
 }
 
 /*
+  Libera a memória de um vetor de strings retornado por parse_lines
+
+  @param lines: vetor de strings que terá memória liberada
+  @param len: tamanho do vetor @lines
+*/
+void free_lines(char** lines, int len) {
+  for(int i = 0; i < len; i++)
+    free(lines[i]);
+  free(lines);
+}
+
+/*
   Recebe o SIGCHLD do processo filho, evitando que ele se torne zumbi. O while evita 
   que SIGCHLDs sejam ignorados caso eles cheguem enquanto outro estiver sendo tratado. 
   Se waitpid retornar 0, significa que não há mais nenhum SIGCHLD a ser tratado nesse 

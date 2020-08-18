@@ -2,16 +2,7 @@
 #define __HTTP_REQUEST_H
 
 #include "../methods/methods.h"
-
-/*
-  Estrutura que contém informações sobre os campos do header de uma requisição HTTP. Possui o
-  membro 'next' para criar uma lista encadeada
-*/
-typedef struct request_field {
-  char* name;  // nome do campo
-  char* value; // valor
-  struct request_field* next; // próximo request_field_t
-} request_field_t;
+#include "../header/header.h"
 
 /*
   Estrutura que contém informações sobre a request line de uma requisição HTTP
@@ -26,8 +17,8 @@ typedef struct request_line {
   Estrutura que contém informações sobre a requisição HTTP feita por um cliente
 */
 typedef struct request {
-  request_line_t   req_line; // request line
-  request_field_t* header;   // lista encadeada de cada campo do header
+  request_line_t  req_line; // request line
+  header_field_t* header;   // lista encadeada de cada campo do header
   char*  body;               // corpo da requisição (NULL se não houver)
 } request_t;
 
@@ -58,15 +49,6 @@ void parse_request_line(char* req_buffer, request_line_t *const req_line);
   @param req_buffer: buffer da requisição
 */
 char* get_request_body(char* req_buffer);
-
-/*
-  Analisa o header da requisição criando um request_field_t para cada campo.
-
-  @param header_lines: vetor de strings que contém cada linha do header da requisição
-  @param len: quantidade de linha de @header_lines
-  @param field: lista encadeada de request_field_t (cada campo do header)
-*/
-void parse_request_header(char** header_lines, int len, request_field_t** field);
 
 /*
   Libera a memória de um request_t

@@ -4,18 +4,7 @@
 #include "request.h"
 #include "../methods/methods.h"
 #include "../../util/util.h"
-
-/*
-  Libera a memória de um header_lines
-
-  @param header_lines: vetor de strings que terá memória liberada
-  @param len: tamanho do vetor @header_lines
-*/
-static void free_header_lines(char** header_lines, int len) {
-  for(int i = 0; i < len; i++)
-    free(header_lines[i]);
-  free(header_lines);
-}
+#include "../header/header.h"
 
 /*
   Libera a memória de um request_t
@@ -27,8 +16,8 @@ void free_request(request_t* req) {
   free(req->req_line.path);
   free(req->req_line.version);
 
-  request_field_t* aux = req->header;
-  request_field_t* save_next = NULL;
+  header_field_t* aux = req->header;
+  header_field_t* save_next = NULL;
   while(aux) {
     save_next = aux->next;
     free(aux->name);
@@ -86,10 +75,10 @@ void parse_request(char* req_buffer, request_t* const req) {
   parse_request_line(req_line, &req->req_line);
   
   // faz parse em header_lines populando a lista encadeada em req->header
-  parse_request_header(header_lines + 1, counter - 1, &req->header);
+  parse_header_lines(header_lines + 1, counter - 1, &req->header);
 
   // libera memória do vetor de strings
-  free_header_lines(header_lines, counter);
+  free_lines(header_lines, counter);
 }
 
 /*
@@ -116,42 +105,5 @@ char* get_request_body(char* req_buffer) {
 
     // cria e retorna uma cópia do body, pois este aponta para uma região em req_buffer
     return make_copy(body);
-  }
-}
-
-/*
-  Analisa o header da requisição criando um request_field_t para cada campo.
-
-  @param header_lines: vetor de strings que contém cada linha do header da requisição
-  @param len: quantidade de linha de @header_lines
-  @param field: lista encadeada de request_field_t (cada campo do header)
-*/
-void parse_request_header(char** header_lines, int header_len, request_field_t** field) {
-  if(header_len == 0)
-    panic("parse_request_header", "tamanho do header não pode ser zero!");
-
-  char* token;
-  for(int i = 0; i < header_len; i++) {
-    // aloca memória para um field
-    *field = calloc(1, sizeof(request_field_t));
-    if(field == NULL)
-      panic("parse_request_header", "falha ao alocar memória para request_field_t");
-    
-    // parser para pegar o nome do field
-    token = strtok(header_lines[i], ":");
-    if(token == NULL)
-      panic("parse_request_header", "nome do campo do header não encontrado!");
-    (*field)->name = make_copy(token);
-    
-    // parser para pegar o valor do field
-    token = strtok(NULL, ":");
-    if(token == NULL)
-      panic("parse_request_header", "valor do campo do header não encontrado!");
-    if(*token == ' ')
-      ++token;
-    (*field)->value = make_copy(token);
-
-    // field aponta para o endereço do próximo item da lista
-    field = &(*field)->next;
   }
 }

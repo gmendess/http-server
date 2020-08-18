@@ -69,4 +69,12 @@ void sigchld_handler(int sig);
 */
 void get_addr_and_port(struct sockaddr* sa, int* port, char* buffer, int len);
 
+/*
+  Libera a memória de um vetor de strings retornado por parse_lines
+
+  @param lines: vetor de strings que terá memória liberada
+  @param len: tamanho do vetor @lines
+*/
+void free_lines(char** lines, int len);
+
 #endif // __HTTP_UTIL_H
