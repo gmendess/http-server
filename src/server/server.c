@@ -63,15 +63,15 @@ static void bind_server(server_t* server, struct addrinfo* ai) {
     break;
   }
 
-  // não preciso mais de 'ai', libero sua memória
-  freeaddrinfo(ai);
-
   // se aux == NULL, cheguei ao final da lista sem conseguir criar o socket e dar bind
   if(aux == NULL)
     panic("bind_server", "não foi possível atribuir nenhum endereço ao servidor");
   
   get_addr_and_port(aux->ai_addr, &server->port, server->addr, sizeof(server->addr));
   server->listener = listener;
+
+  // não preciso mais de 'ai', libero sua memória
+  freeaddrinfo(ai);
 }
 
 /*
