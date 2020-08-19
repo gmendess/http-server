@@ -20,7 +20,7 @@ typedef struct __route_t {
 } route_t;
 
 typedef struct {
-  int listener;   // file descriptor do servidor
+  int listener;   // file descriptor do servidor (não usar no processo filho)
   char addr[INET6_ADDRSTRLEN]; // endereço do servidor
   int  port;      // porta do servidor
   route_t* route; // lista encadeada das rotas do servidor

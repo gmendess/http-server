@@ -75,6 +75,25 @@ static void bind_server(server_t* server, struct addrinfo* ai) {
 }
 
 /*
+  Libera os recursos alocados para um server_t, no caso, apenas a lista 
+  encadeada de rotas.
+
+  @param server: servidor que terá os recursos desalocados
+*/
+static void free_server(server_t* server) {
+  route_t* aux = server->route;
+  route_t* prev = NULL;
+  while(aux) {
+    prev = aux;
+    aux = aux->next;
+    free(prev);
+  }
+
+  if(server->listener >= 0)
+    close(server->listener);
+}
+
+/*
   Função responsável por lidar com a requisição de um cliente
 
   @param server: informações do servidor
@@ -96,6 +115,8 @@ static void handle_request(server_t* server, int clientfd) {
     route->handler(clientfd, &req);
 
   free_request(&req);
+  free_server(server);
+
   exit(EXIT_SUCCESS);
 }
 
@@ -163,6 +184,7 @@ void start_listening(server_t* server) {
     if(pid == 0) {
       // processo filho
       close(server->listener); // fecha o socket do listener, pois o processo filho não precisa dele
+      server->listener = -1;   // configura o socket como um inválido, por favor, não usar
       handle_request(server, clientfd); // lida com a requisição
     }
     else if(pid > 0) {
@@ -174,6 +196,8 @@ void start_listening(server_t* server) {
       perror("fork");
 
   }
+
+  free_server(server);
 }
 
 /*
