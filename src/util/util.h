@@ -40,7 +40,7 @@ int char_counter(char* buffer, char c);
 
   @param buffer: buffer que será copiado
 */
-char* make_copy(char* buffer);
+char* make_copy(const char* buffer);
 
 /*
   Sepera o conteúdo de um buffer em várias linhas; retorna a quantidade de strings contidas em @str_array

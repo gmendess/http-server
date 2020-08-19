@@ -74,7 +74,7 @@ int char_counter(char* buffer, char c) {
 
   @param buffer: buffer que será copiado
 */
-char* make_copy(char* buffer) {
+char* make_copy(const char* buffer) {
   size_t len = strlen(buffer) + 1;
   
   char* copy = calloc(len, sizeof(char));
