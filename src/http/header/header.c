@@ -5,38 +5,65 @@
 #include "header.h"
 
 /*
+  Adiciona um nó à lista encadeada apontada por @header
+
+  @param header: lista encadeada de header_field_t
+  @param field: nome de um campo do header
+  @param value: conteúdo do campo do header de nome @field
+*/
+void add_header_field(header_t* header, const char* field, const char* value) {
+  header_field_t* new = calloc(1, sizeof(*new));
+  if(new == NULL)
+    errno_panic("add_header: calloc");
+
+  new->name  = make_copy(field);
+  new->value = make_copy(value);
+  new->next  = header->field;
+
+  header->field = new;
+}
+
+/*
   Analisa o header de uma requisição/resposta HTTP criando um header_field_t para cada campo.
 
   @param header_lines: vetor de strings que contém cada linha do header
   @param len: quantidade de linha de @header_lines
-  @param field: lista encadeada de header_field_t (cada campo do header)
+  @param header: lista encadeada de header_field_t (cada campo do header)
 */
-void parse_header_lines(char** header_lines, int header_len, header_field_t** field) {
+void parse_header_lines(char** header_lines, int header_len, header_t* header) {
   if(header_len == 0)
     panic("parse_header_lines", "tamanho do header não pode ser zero!");
 
-  char* token;
-  for(int i = 0; i < header_len; i++) {
-    // aloca memória para um field
-    *field = calloc(1, sizeof(header_field_t));
-    if(field == NULL)
-      panic("parse_header_lines", "falha ao alocar memória para header_field_t");
-    
-    // parser para pegar o nome do field
-    token = strtok(header_lines[i], ":");
-    if(token == NULL)
-      panic("parse_header_lines", "nome do campo do header não encontrado!");
-    (*field)->name = make_copy(token);
-    
-    // parser para pegar o valor do field
-    token = strtok(NULL, ":");
-    if(token == NULL)
-      panic("parse_header_lines", "valor do campo do header não encontrado!");
-    if(*token == ' ')
-      ++token;
-    (*field)->value = make_copy(token);
+  char* field = NULL,
+      * value = NULL;
 
-    // field aponta para o endereço do próximo item da lista
-    field = &(*field)->next;
+  for(int i = 0; i < header_len; i++) {
+    field = strtok(header_lines[i], ":");
+    if(field == NULL)
+      panic("parse_header_lines", "nome do campo do header não encontrado!");
+
+    value = strtok(NULL, "\0");
+    if(value == NULL)
+      panic("parse_header_lines", "valor do campo do header não encontrado!");
+    while(*value == ' ')
+      ++value;
+
+    add_header_field(header, field, value);
   }
+}
+
+/*
+  Libera uma lista encadeada de header_field_t
+
+  @param header: estrutura que representa a lista encadeada
+*/
+void free_header(header_t* header) {
+  while(header->field) {
+    header_field_t* save_next = header->field->next;
+    free(header->field->name);
+    free(header->field->value);
+    free(header->field);
+    header->field = save_next;
+  }
+  header->field = NULL;
 }

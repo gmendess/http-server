@@ -15,16 +15,7 @@ void free_request(request_t* req) {
   free(req->body);
   free(req->req_line.path);
   free(req->req_line.version);
-
-  header_field_t* aux = req->header;
-  header_field_t* save_next = NULL;
-  while(aux) {
-    save_next = aux->next;
-    free(aux->name);
-    free(aux->value);
-    free(aux);
-    aux = save_next;
-  }
+  free_header(&req->header);
 }
 
 /*

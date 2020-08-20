@@ -18,8 +18,8 @@ typedef struct request_line {
 */
 typedef struct request {
   request_line_t  req_line; // request line
-  header_field_t* header;   // lista encadeada de cada campo do header
-  char*  body;               // corpo da requisição (NULL se não houver)
+  header_t header;          // lista encadeada de cada campo do header
+  char*  body;              // corpo da requisição (NULL se não houver)
 } request_t;
 
 /*
