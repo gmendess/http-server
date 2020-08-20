@@ -77,4 +77,12 @@ void get_addr_and_port(struct sockaddr* sa, int* port, char* buffer, int len);
 */
 void free_lines(char** lines, int len);
 
+/*
+  Retorna a data e hora atual com o fuso horário a partir do Meridiano de Greenwich.
+
+  Como exemplo, o texto retornado é formatado da seguinte forma: "Thu, 20 Aug 2020 21:56:58 GMT",
+  sem as aspas
+*/
+const char* gmt_date_now();
+
 #endif // __HTTP_UTIL_H

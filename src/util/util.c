@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <time.h>
 
 #ifndef __USE_POSIX
 #define __USE_POSIX
@@ -170,4 +171,22 @@ void get_addr_and_port(struct sockaddr* sa, int* port, char* buffer, int len) {
     if(port)
       *port = ntohs( ((struct sockaddr_in6*) sa)->sin6_port );
   }
+}
+
+/*
+  Retorna a data e hora atual com o fuso horário a partir do Meridiano de Greenwich.
+
+  Como exemplo, o texto retornado é formatado da seguinte forma: "Thu, 20 Aug 2020 21:56:58 GMT",
+  sem as aspas
+*/
+const char* gmt_date_now() {
+  static char formated_date[30] = {0};
+
+  time_t time_now = time(NULL);
+  struct tm* t = gmtime(&time_now);
+
+  // Thu, 20 Aug 2020 21:56:58 GMT
+  strftime(formated_date, 30, "%a, %d %b %Y %T GMT", t);
+
+  return formated_date;
 }
