@@ -2,6 +2,7 @@
 #define __HTTP_SERVER_H
 
 #include "../http/request/request.h"
+#include "../http/response/response.h"
 #include "../http/request/methods/methods.h"
 
 /*
@@ -10,7 +11,7 @@
 #define BACKLOG 5
 
 // função handler para um rota 
-typedef void(*route_handler_t)(int, request_t*);
+typedef void(*route_handler_t)(response_t*, request_t*);
 
 typedef struct __route_t {
   const char* path;          // caminho especificado na requisição

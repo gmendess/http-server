@@ -19,24 +19,9 @@
 #include <string.h>
 #include "../src/server/server.h"
 
-void home_handler(int clientfd, request_t* req) {
-  char* resp = {
-    "HTTP/1.1 200 OK\n"\
-    "Content-Type: text/html\n"\
-    "Content-Length: 35\n\n"\
-    "<h1>Oi, essa eh a pagina /home/<h1>"\
-  };
-  write(clientfd, resp, strlen(resp));
-}
-
-void home_post_handler(int clientfd, request_t* req) {
-  char* resp = {
-    "HTTP/1.1 200 OK\n"\
-    "Content-Type: text/html\n"\
-    "Content-Length: 44\n\n"\
-    "<h1>Oi, essa eh a de post poggers /home/<h1>"\
-  };
-  write(clientfd, resp, strlen(resp));
+void home_handler(response_t* resp, request_t* req) {
+  add_header_field(&resp->header, "Content-Type", "text/html");
+  send_http_response(resp, "<h1>Boas-vindas à página Home</h1>");
 }
 
 int main() {
@@ -45,9 +30,7 @@ int main() {
   new_http_server(&server, "0.0.0.0", "http");
 
   handle_route(&server, "/home/", home_handler, GET);
-  handle_route(&server, "/home/", home_post_handler, POST);
   
   start_listening(&server);
-
   return 0;
 }

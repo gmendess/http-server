@@ -25,6 +25,7 @@
 #include "server.h"
 #include "../util/util.h"
 #include "../http/request/request.h"
+#include "../http/response/response.h"
 
 /*
   Percorre a lista encadeada @ai tentando criar um socket e associá-lo à algum endereço dessa lista
@@ -105,16 +106,29 @@ static void handle_request(server_t* server, int clientfd) {
 
   request_t req = {0};
   parse_request(buffer, &req);
-  
+
+  // response padrão
+  response_t resp = {0};
+  resp.clientfd = clientfd;
+  resp.status = OK;
+  add_header_field(&resp.header, "Date", gmt_date_now());
+
   route_t* route = find_route(server, req.req_line.path, req.req_line.method);
-  if(route == NULL)
-    write(clientfd, "Pagina nao encontrada!\n", 23);
-  else if(route == (route_t*) -1)
-    write(clientfd, "Metodo nao disponivel para essa rota!\n", 38);
+  if(route == NULL) {
+    resp.status = NotFound;
+    add_header_field(&resp.header, "Content-Type", "text/plain");
+    send_http_response(&resp, "404 Not Found");
+  }
+  else if(route == (route_t*) -1) {
+    resp.status = MethodNotAllowed;
+    add_header_field(&resp.header, "Content-Type", "text/plain");
+    send_http_response(&resp, "405 Method Not Allowed");
+  }
   else
-    route->handler(clientfd, &req);
+    route->handler(&resp, &req);
 
   free_request(&req);
+  free_header(&resp.header);
   free_server(server);
 
   exit(EXIT_SUCCESS);
