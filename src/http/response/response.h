@@ -5,17 +5,21 @@
 #include "../request/request.h"
 #include "../header/header.h"
 
+/*
+  Estrutura que representa uma resposta HTTP
+*/
 typedef struct {
-  char* http_version;        // versão do protocolo (evitar mexer)
-  http_status_code_t status; // código de status da resposta (ver status_codes.h)
-} status_line_t;
-
-typedef struct {
-  int clientfd;              // socket do cliente
-  status_line_t status_line; // status-line de uma resposta HTTP
-  header_field_t* header;    // lista encadeada de campos do header
+  int              clientfd; // socket do cliente
+  http_status_code_t status; // status da resposta HTTP
+  header_t           header; // lista encadeada de campos do header
 } response_t;
 
-void add_header(response_t* resp, const char* field, const char* value);
+/*
+  Envia uma resposta HTTP para um cliente.
+
+  @param resp: informações sobre status e cabeçalhos da resposta
+  @param body: corpo da resposta, pode ser NULL
+*/
+int send_http_response(response_t* resp, const char* body);
 
 #endif // __HTTP_RESPONSE_H
