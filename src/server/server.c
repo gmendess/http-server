@@ -114,16 +114,10 @@ static void handle_request(server_t* server, int clientfd) {
   add_header_field(&resp.header, "Date", gmt_date_now());
 
   route_t* route = find_route(server, req.req_line.path, req.req_line.method);
-  if(route == NULL) {
-    resp.status = NotFound;
-    add_header_field(&resp.header, "Content-Type", "text/plain");
-    send_http_response(&resp, "404 Not Found");
-  }
-  else if(route == (route_t*) -1) {
-    resp.status = MethodNotAllowed;
-    add_header_field(&resp.header, "Content-Type", "text/plain");
-    send_http_response(&resp, "405 Method Not Allowed");
-  }
+  if(route == NULL)
+    send_default_404(&resp);
+  else if(route == (route_t*) -1)
+    send_default_405(&resp);
   else
     route->handler(&resp, &req);
 

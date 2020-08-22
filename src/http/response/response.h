@@ -22,4 +22,10 @@ typedef struct {
 */
 int send_http_response(response_t* resp, const char* body);
 
+int send_default_200(response_t* resp);
+
+int send_default_404(response_t* resp);
+
+int send_default_405(response_t* resp);
+
 #endif // __HTTP_RESPONSE_H
