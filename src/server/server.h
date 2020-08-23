@@ -4,6 +4,7 @@
 #include "../http/request/request.h"
 #include "../http/response/response.h"
 #include "../http/request/methods/methods.h"
+#include "../errors/errors.h"
 
 /*
   Fila de espera do socket; usado na syscall 'listen'
@@ -40,20 +41,22 @@ int new_http_server(server_t* server, const char* addr, const char* port);
 /*
   Inicia o processo de escuta por requisição, programa entra em loop infinito esperando
   por conexões.
+  Retorna diferente de 0 em caso de erro
 
   @param server: estrutura server_t contendo informações do servidor a ser iniciado 
 */
-void start_listening(server_t* server);
+int start_listening(server_t* server);
 
 /*
   Adiciona um handler para um determinada rota do servidor
+  Retorna diferente de 0 em caso de erro.
 
   @param server: servidor que passará a lidar com a rota especificada em @route
   @param route: nome da rota
   @param handler: função handler que será executada quando um cliente acessar @route 
   @param method: método HTTP
 */
-void handle_route(server_t* server,
+int handle_route(server_t* server,
                   const char* route,
                   route_handler_t handler,
                   http_method_t   method);
