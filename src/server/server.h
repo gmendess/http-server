@@ -57,17 +57,19 @@ int start_listening(server_t* server);
   @param method: método HTTP
 */
 int handle_route(server_t* server,
-                  const char* route,
-                  route_handler_t handler,
-                  http_method_t   method);
+                 const char* route,
+                 route_handler_t handler,
+                 http_method_t   method);
 
 /*
   Procura uma rota de nome @path contida na lista de rotas do servidor
-  Retorna ponteiro para a rota ou NULL, caso não encontrada
+  Retorna diferente de 0 em caso de erro
 
   @param server: servidor que será executada a busca pela rota
   @param path: nome da rota
+  @param method: método HTTP
+  @param out: ponteiro onde o handler da rota será retornado
 */
-route_t* find_route(server_t* server, const char* path, http_method_t method);
+int find_route(server_t* server, const char* path, http_method_t method, route_t** out);
 
 #endif // __HTTP_SERVER_H

@@ -25,6 +25,12 @@
 // Servidor inválido
 #define ERR_SERVER   8
 
+// Rota não encontrada
+#define ERR_ROUTENOTFOUND 9
+
+// Rota encontrada, contudo método HTTP não suportado
+#define ERR_ROUTEMET 10
+
 void http_error(const char* func_name, int err);
 
 #endif // __HTTP_ERRORS_H

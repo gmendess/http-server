@@ -33,7 +33,7 @@ int main() {
     return EXIT_FAILURE;
   }
 
-  if( (err = handle_route(&server, "", home_handler, GET)) != 0)
+  if( (err = handle_route(&server, "/home/", home_handler, GET)) != 0)
     http_error("handle_route", err);
 
   if( (err = start_listening(&server)) != 0) {

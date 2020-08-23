@@ -12,7 +12,9 @@ char* errors_str[] = {
   "não foi possível adquirir lista de endereços por getaddrinfo",
   "não foi possível colocar o servidor para escutar por conexões",
   "rota informada não é válida",
-  "servidor informado não é válido"
+  "servidor informado não é válido",
+  "rota não encontrada",
+  "rota encontrada, contudo não suporta o método HTTP informado"
 };
 
 void http_error(const char* func_name, int err) {

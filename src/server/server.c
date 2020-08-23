@@ -121,10 +121,11 @@ static void handle_request(server_t* server, int clientfd) {
   resp.status = OK;
   add_header_field(&resp.header, "Date", gmt_date_now());
 
-  route_t* route = find_route(server, req.req_line.path, req.req_line.method);
-  if(route == NULL)
+  route_t* route = NULL;
+  err = find_route(server, req.req_line.path, req.req_line.method, &route);
+  if(err == ERR_ROUTENOTFOUND)
     send_default_404(&resp);
-  else if(route == (route_t*) -1)
+  else if(err == ERR_ROUTEMET)
     send_default_405(&resp);
   else
     route->handler(&resp, &req);
@@ -259,27 +260,31 @@ int handle_route(server_t* server,
 
 /*
   Procura uma rota de nome @path contida na lista de rotas do servidor
-  Retorna ponteiro para a rota ou NULL, caso não encontrada
+  Retorna diferente de 0 em caso de erro
 
   @param server: servidor que será executada a busca pela rota
   @param path: nome da rota
+  @param method: método HTTP
+  @param out: ponteiro onde o handler da rota será retornado
 */
-route_t* find_route(server_t* server, const char* path, http_method_t method) {
+int find_route(server_t* server, const char* path, http_method_t method, route_t** out) {
+  int route_found = 0;
   route_t* aux = server->route;
-  route_t* route_found = NULL;
   while(aux != NULL) {
     if(strcmp(aux->path, path) == 0) {
-      route_found = (route_t*) -1;
-      if(aux->method == method)
-        return aux; // rota encontrada
+      route_found = 1; // rota encontrada
+
+      // rota encontrada e método HTTP suportado
+      if(aux->method == method) {
+        *out = aux;
+        return 0; // sucesso
+      }
     }
     aux = aux->next;
   }
 
-  // se a rota foi encontrada mas o método HTTP não corresponde, retorna (route_t*) -1
-  // XXX: tenho que melhorar isso ai, pq é meio gambiarra
-  if(route_found != NULL)
-    return route_found;
-
-  return NULL;
+  if(!route_found)
+    return ERR_ROUTENOTFOUND;
+  else
+    return ERR_ROUTEMET;
 }
