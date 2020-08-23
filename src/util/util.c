@@ -94,9 +94,6 @@ char* make_copy(const char* buffer) {
   @param lines: uma "dica" de quantas linhas é possível que @buffer tenha (0 se não souber).
 */
 int parse_lines(char* buffer, char*** str_array, int lines) {
-  if(str_array == NULL)
-    return -1;
-
   if(lines == 0)
     lines = 1;
 

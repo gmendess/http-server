@@ -30,12 +30,13 @@ void add_header_field(header_t* header, const char* field, const char* value);
 
 /*
   Analisa o header de uma requisição/resposta HTTP criando um header_field_t para cada campo.
+  Retorna diferente de 0 em caso de erro
 
   @param header_lines: vetor de strings que contém cada linha do header
   @param len: quantidade de linha de @header_lines
   @param field: lista encadeada de header_field_t (cada campo do header)
 */
-void parse_header_lines(char** header_lines, int header_len, header_t* header);
+int parse_header_lines(char** header_lines, int header_len, header_t* header);
 
 /*
   Libera uma lista encadeada de header_field_t

@@ -29,12 +29,13 @@ typedef struct {
 
 /*
   Cria um novo servidor http
+  Retorna diferente de 0 em caso de erro
 
   @param server: estrutura que conterá informações do servidor
   @param addr: endereço do servidor 
   @para port: serviço (porta)
 */
-void new_http_server(server_t* server, const char* addr, const char* port);
+int new_http_server(server_t* server, const char* addr, const char* port);
 
 /*
   Inicia o processo de escuta por requisição, programa entra em loop infinito esperando

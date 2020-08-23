@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "../../util/util.h"
+#include "../../errors/errors.h"
 #include "header.h"
 
 /*
@@ -30,26 +31,24 @@ void add_header_field(header_t* header, const char* field, const char* value) {
   @param len: quantidade de linha de @header_lines
   @param header: lista encadeada de header_field_t (cada campo do header)
 */
-void parse_header_lines(char** header_lines, int header_len, header_t* header) {
-  if(header_len == 0)
-    panic("parse_header_lines", "tamanho do header não pode ser zero!");
-
+int parse_header_lines(char** header_lines, int header_len, header_t* header) {
   char* field = NULL,
       * value = NULL;
 
   for(int i = 0; i < header_len; i++) {
     field = strtok(header_lines[i], ":");
-    if(field == NULL)
-      panic("parse_header_lines", "nome do campo do header não encontrado!");
-
     value = strtok(NULL, "\0");
-    if(value == NULL)
-      panic("parse_header_lines", "valor do campo do header não encontrado!");
+
+    if(!field || !value)
+      return ERR_HEADER;
+
     while(*value == ' ')
       ++value;
 
     add_header_field(header, field, value);
   }
+
+  return 0;
 }
 
 /*

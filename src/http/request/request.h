@@ -23,32 +23,35 @@ typedef struct request {
 } request_t;
 
 /*
-  Ponto de entrada para começar o parser da requisição
+  Ponto de entrada para começar o parser da requisição.
+  Retorna diferente de 0 em caso de erro
 
   @param req_buffer: mensagem completa da requisição
   @param req: estrutura que conterá cada informação da requisição
 */
-void parse_request(char* req_buffer, request_t* const req);
+int parse_request(char* req_buffer, request_t* const req);
 
 /*
   Faz parse da Request-line de uma requisição http e salva as informações em
   uma request_line_t.
+  Retorna diferente de 0 em caso de erro.
 
   @param req_buffer: mensagem da requisição
   @param req_line: ponteiro p/ estrutura que conterá a request line
 */
-void parse_request_line(char* req_buffer, request_line_t *const req_line);
+int parse_request_line(char* req_buffer, request_line_t *const req_line);
 
 /*
-  Analisa o buffer da requisição em busca de um body, se houver, retorna a string que o represeta,
-  caso contrário, retorna NULL
+  Analisa o buffer da requisição em busca de um body, se houver, retorna 0 e preenche @body_out com a 
+  string que o representa, caso contrário, retorna diferente de 0.
 
   Obs: se houver um body, req_buffer será modificado, colocando um null character após o término
   do header, separando o header do body
 
   @param req_buffer: buffer da requisição
+  @param body_out: ponteiro para a string contendo o body retornado
 */
-char* get_request_body(char* req_buffer);
+int get_request_body(char* req_buffer, char** body_out);
 
 /*
   Libera a memória de um request_t

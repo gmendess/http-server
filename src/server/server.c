@@ -24,6 +24,7 @@
 #include <string.h>
 #include "server.h"
 #include "../util/util.h"
+#include "../errors/errors.h"
 #include "../http/request/request.h"
 #include "../http/response/response.h"
 
@@ -34,7 +35,7 @@
   @param ai: lista encadeada de endereços(retornada por getaddrinfo) em que um de seus endereços
    será associado ao servidor 
 */
-static void bind_server(server_t* server, struct addrinfo* ai) {
+static int bind_server(server_t* server, struct addrinfo* ai) {
   int listener = 0; // file descriptor do socket do servidor
   
   // ponteiro auxiliar para percorrer a lista
@@ -66,13 +67,15 @@ static void bind_server(server_t* server, struct addrinfo* ai) {
 
   // se aux == NULL, cheguei ao final da lista sem conseguir criar o socket e dar bind
   if(aux == NULL)
-    panic("bind_server", "não foi possível atribuir nenhum endereço ao servidor");
+    return ERR_BIND;
   
   get_addr_and_port(aux->ai_addr, &server->port, server->addr, sizeof(server->addr));
   server->listener = listener;
 
   // não preciso mais de 'ai', libero sua memória
   freeaddrinfo(ai);
+
+  return 0;
 }
 
 /*
@@ -101,11 +104,14 @@ static void free_server(server_t* server) {
   @param clientfd: file descriptor para se comunicar com o cliente
 */
 static void handle_request(server_t* server, int clientfd) {
+  int err = 0; // controle de erros
+
   char buffer[1024] = {0};
   recv(clientfd, buffer, sizeof(buffer), 0);
 
   request_t req = {0};
-  parse_request(buffer, &req);
+  if( (err = parse_request(buffer, &req)) != 0 )
+    panic("handle_request", "erro genérico!");
 
   // response padrão
   response_t resp = {0};
@@ -135,7 +141,8 @@ static void handle_request(server_t* server, int clientfd) {
   @param addr: endereço do servidor 
   @param port: serviço (porta)
 */
-void new_http_server(server_t* server, const char* addr, const char* port) {
+int new_http_server(server_t* server, const char* addr, const char* port) {
+  int err = 0; // controle de erros
 
   // lista de rotas vazia
   server->route = NULL;
@@ -149,12 +156,15 @@ void new_http_server(server_t* server, const char* addr, const char* port) {
   struct addrinfo* ai = NULL;
 
   // adquire lista de endereços do host/serviço
-  int err = getaddrinfo(addr, port, &hints, &ai);
+  err = getaddrinfo(addr, port, &hints, &ai);
   if(err != 0)
     net_panic("new_http_server: getaddrinfo", err);
 
   // associado o servidor com algum endereço disponível na lista 'ai'
-  bind_server(server, ai);
+  if( (err = bind_server(server, ai)) != 0)
+    return err;
+
+  return 0;
 }
 
 /*
