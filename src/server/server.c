@@ -244,9 +244,7 @@ int handle_route(server_t* server,
     return ERR_SERVER;
 
   // aloca memória para um route_t
-  route_t* new_route = calloc(1, sizeof(route_t));
-  if(!new_route)
-    errno_panic("handle_route: calloc");
+  route_t* new_route = must_calloc(1, sizeof(route_t));
 
   // configurando route_t
   new_route->path    = route;

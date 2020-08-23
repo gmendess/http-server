@@ -13,9 +13,7 @@
   @param value: conteúdo do campo do header de nome @field
 */
 void add_header_field(header_t* header, const char* field, const char* value) {
-  header_field_t* new = calloc(1, sizeof(*new));
-  if(new == NULL)
-    errno_panic("add_header: calloc");
+  header_field_t* new = must_calloc(1, sizeof(*new));
 
   new->name  = make_copy(field);
   new->value = make_copy(value);

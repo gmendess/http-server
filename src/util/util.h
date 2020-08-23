@@ -13,21 +13,6 @@
 void net_panic(const char* func_name, const int err);
 
 /*
-  Exibe a mensagem de erro correspondente à errno e encerra o programa
-
-  @param func_name: nome da função que deu erro
-*/
-void errno_panic(const char* func_name);
-
-/*
-  Exibe uma mensagem de erro que encerra o programa
-
-  @param func_name: nome da função que deu erro
-  @param msg: mensagem de erro
-*/
-void panic(const char* func_name, const char* msg);
-
-/*
   Retorna a quantidade de vezes que um caractere aparece em uma string
 
   @param buffer: string que será analisada
@@ -84,5 +69,14 @@ void free_lines(char** lines, int len);
   sem as aspas
 */
 const char* gmt_date_now();
+
+/*
+  Mesma coisa que um calloc, contudo encerra o programa caso ocorra erro ao alocar a 
+  memória solicitada
+
+  @param num_elements: número de elementos à serem alocadas
+  @param size: tamanho de cada @num_elements
+*/
+void* must_calloc(size_t num_elements, size_t size);
 
 #endif // __HTTP_UTIL_H
