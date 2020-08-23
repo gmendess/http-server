@@ -25,12 +25,21 @@ void home_handler(response_t* resp, request_t* req) {
 }
 
 int main() {
-  
+  int err = 0;
   server_t server = {0};
-  new_http_server(&server, "0.0.0.0", "http");
-
-  handle_route(&server, "/home/", home_handler, GET);
   
-  start_listening(&server);
+  if( (err = new_http_server(&server, "0.0.0.0", "8080")) != 0) {
+    http_error("new_http_server", err);
+    return EXIT_FAILURE;
+  }
+
+  if( (err = handle_route(&server, "", home_handler, GET)) != 0)
+    http_error("handle_route", err);
+
+  if( (err = start_listening(&server)) != 0) {
+    http_error("start_listening", err);
+    return EXIT_FAILURE;
+  }
+
   return 0;
 }
