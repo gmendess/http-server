@@ -250,20 +250,9 @@ int handle_route(server_t* server,
   new_route->path    = route;
   new_route->handler = handler;
   new_route->method  = method;
-
-  // percorre a lista de rotas do server até chegar no final
-  route_t* aux  = server->route;
-  route_t* prev = NULL;
-  while(aux) {
-    prev = aux;
-    aux = aux->next;
-  }
-
-  // se prev for NULL, 'server' não possui nenhuma rota ainda
-  if(prev == NULL)
-    server->route = new_route;
-  else
-    prev->next = new_route;
+  new_route->next    = server->route;
+  // ligando a nova rota à lista de rotas
+  server->route      = new_route;
 
   return 0;
 }
