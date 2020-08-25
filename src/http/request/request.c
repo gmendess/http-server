@@ -15,7 +15,6 @@
 void free_request(request_t* req) {
   free(req->body);
   free(req->req_line.path);
-  free(req->req_line.version);
   free_header(&req->header);
 }
 
@@ -44,7 +43,8 @@ int parse_request_line(char* req_buffer, request_line_t *const req_line) {
   if(token == NULL)
     return ERR_REQLINE; // req-line inválido, versão não encontrada
 
-  req_line->version = make_copy(token);
+  parse_version(token, &req_line->version);
+
   return 0;
 }
 
@@ -111,4 +111,27 @@ int get_request_body(char* req_buffer, char** body_out) {
   }
 
   return 0; // sucesso
+}
+
+/*
+  Faz parse da versão do protocolo HTTP
+
+  @param buffer: buffer que será analisado para adquirir a versão do protocolo
+  @param version: ponteiro para estrutura que conterá a versão do protocolo após a análise
+*/
+int parse_version(char* buffer, version_t* version) {
+  char* token = NULL;
+  
+  // separa o prefixo "HTTP" da versão
+  token = strtok(buffer, "/");
+
+  // adquire a parte "major" da versão
+  token = strtok(NULL, ".");
+  version->major = atoi(token);
+
+  // adquire a parte "minor" da versão
+  token = strtok(NULL, "\0");
+  version->minor = atoi(token);
+
+  return 0;
 }

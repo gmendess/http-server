@@ -5,12 +5,20 @@
 #include "../header/header.h"
 
 /*
+  Estrutura que contém a versão do protocolo HTTP
+*/
+typedef struct {
+  int major;
+  int minor;
+} version_t;
+
+/*
   Estrutura que contém informações sobre a request line de uma requisição HTTP
 */
 typedef struct request_line {
   http_method_t method; // método HTTP (ex.: POST, GET, DELETE etc)
   char* path;           // caminho do recurso que está sendo requisitado (ex.: /admin/login/)
-  char* version;        // versão do protocolo (ex.: HTTP/1.1)
+  version_t version;    // versão do protocolo (ex.: HTTP/1.1)
 } request_line_t;
 
 /*
@@ -59,5 +67,13 @@ int get_request_body(char* req_buffer, char** body_out);
   @param req: request_t que terá memória de seus membros liberados
 */
 void free_request(request_t* req);
+
+/*
+  Faz parse da versão do protocolo HTTP
+
+  @param buffer: buffer que será analisado para adquirir a versão do protocolo
+  @param version: ponteiro para estrutura que conterá a versão do protocolo após a análise
+*/
+int parse_version(char* buffer, version_t* version);
 
 #endif // __HTTP_REQUEST_H
