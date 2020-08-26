@@ -31,6 +31,9 @@
 // Rota encontrada, contudo método HTTP não suportado
 #define ERR_ROUTEMET 10
 
+// Versão do protocolo inválida
+#define ERR_VERSION  11
+
 void http_error(const char* func_name, int err);
 
 #endif // __HTTP_ERRORS_H

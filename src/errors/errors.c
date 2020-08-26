@@ -14,7 +14,8 @@ char* errors_str[] = {
   "rota informada não é válida",
   "servidor informado não é válido",
   "rota não encontrada",
-  "rota encontrada, contudo não suporta o método HTTP informado"
+  "rota encontrada, contudo não suporta o método HTTP informado",
+  "versão do protocolo HTTP inválida"
 };
 
 void http_error(const char* func_name, int err) {

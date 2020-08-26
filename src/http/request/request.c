@@ -27,6 +27,7 @@ void free_request(request_t* req) {
   @param req_line: ponteiro p/ estrutura que conterá a request line
 */
 int parse_request_line(char* req_buffer, request_line_t *const req_line) {
+  int err = 0;
   char* token = NULL;
 
   token = strtok(req_buffer, " \r\n"); // método HTTP
@@ -43,9 +44,9 @@ int parse_request_line(char* req_buffer, request_line_t *const req_line) {
   if(token == NULL)
     return ERR_REQLINE; // req-line inválido, versão não encontrada
 
-  parse_version(token, &req_line->version);
+  err = parse_version(token, &req_line->version);
 
-  return 0;
+  return err;
 }
 
 /*
@@ -123,15 +124,21 @@ int parse_version(char* buffer, version_t* version) {
   char* token = NULL;
   
   // separa o prefixo "HTTP" da versão
-  token = strtok(buffer, "/");
+  if((token = strtok(buffer, "/")) == NULL)
+    return ERR_VERSION;
 
   // adquire a parte "major" da versão
-  token = strtok(NULL, ".");
+  if( (token = strtok(NULL, ".")) == NULL)
+    return ERR_VERSION;
   version->major = atoi(token);
 
   // adquire a parte "minor" da versão
-  token = strtok(NULL, "\0");
+  if( (token = strtok(NULL, "\0")) == NULL)
+    return ERR_VERSION;
   version->minor = atoi(token);
+
+  if(version->minor < 0 || version->major < 0)
+    return ERR_VERSION;
 
   return 0;
 }
