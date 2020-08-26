@@ -34,6 +34,9 @@
 // Versão do protocolo inválida
 #define ERR_VERSION  11
 
+// Não foi possível enviar todos os bytes ao cliente
+#define ERR_SEND     12
+
 void http_error(const char* func_name, int err);
 
 #endif // __HTTP_ERRORS_H

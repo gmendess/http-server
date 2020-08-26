@@ -20,20 +20,23 @@
 #include "../src/server/server.h"
 
 void home_handler(response_t* resp, request_t* req) {
-  add_header_field(&resp->header, "Content-Type", "text/html");
-  send_http_response(resp, "<h1>Boas-vindas à página Home</h1>");
+  add_header_field(&resp->header, "Content-Type", "application/xml");
+
+  int err = send_http_response(resp, "<person><name>Gabriel</name><age>20</age></person>");
+  if(err != 0)
+    http_error("send_http_response", err);
 }
 
 int main() {
   int err = 0;
   server_t server = {0};
   
-  if( (err = new_http_server(&server, "0.0.0.0", "8080")) != 0) {
+  if( (err = new_http_server(&server, "0.0.0.0", "http")) != 0) {
     http_error("new_http_server", err);
     return EXIT_FAILURE;
   }
 
-  if( (err = handle_route(&server, "/home/", home_handler, GET)) != 0)
+  if( (err = handle_route(&server, "/api/getPerson", home_handler, GET)) != 0)
     http_error("handle_route", err);
 
   if( (err = start_listening(&server)) != 0) {

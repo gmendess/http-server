@@ -4,6 +4,7 @@
 #include "status-codes/status_codes.h"
 #include "../request/request.h"
 #include "../header/header.h"
+#include "../../errors/errors.h"
 
 /*
   Estrutura que representa uma resposta HTTP

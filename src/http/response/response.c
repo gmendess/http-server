@@ -4,6 +4,22 @@
 #include "response.h"
 #include "../../util/util.h"
 
+static int send_all(int client_fd, const char* buffer, size_t len) {
+  // ponteiro para o buffer. Esse ponteiro será deslocado
+  const char* ptr = buffer;
+
+  // enquanto o tamanho do buffer for maior que zero, significa que ainda há bytes para serem enviados
+  while(len > 0) {
+    int bytes_sent = send(client_fd, ptr, len, MSG_NOSIGNAL);
+    if(bytes_sent == -1)
+      return ERR_SEND;
+
+    ptr += bytes_sent; // desloca ptr pela quantidade de bytes enviados
+    len -= bytes_sent; // decrementa o tamanho do buffer
+  }
+  return 0;
+}
+
 /*
   Envia uma resposta HTTP para um cliente.
 
@@ -22,7 +38,6 @@ int send_http_response(response_t* resp, const char* body) {
     aux = aux->next;
   }
 
-
   if(body) {
     offset += snprintf(&buf[offset], sizeof(buf) - offset, "Content-Length: %lu\r\n\r\n", strlen(body));
     offset += snprintf(&buf[offset], sizeof(buf) - offset, "%s", body);
@@ -30,7 +45,7 @@ int send_http_response(response_t* resp, const char* body) {
   else
     offset += snprintf(&buf[offset], sizeof(buf) - offset, "\r\n");
 
-  return send(resp->clientfd, buf, offset, 0);
+  return send_all(resp->clientfd, buf, offset);
 }
 
 int send_default_200(response_t* resp) {
