@@ -1,9 +1,16 @@
 #include <stdlib.h>
 #include <pthread.h>
+#include <memory.h>
 #include <stdio.h>
 #include "tpool.h"
 #include "../../util/util.h"
 
+/*
+  Inicia uma struct thread_pool_t com seus valores padrões e cria a quantidade de threads
+  especificadas por THREAD_POOL_MAX_SIZE
+
+  param tpool: ponteiro para struct thread_pool_t que será inicializada
+*/
 int thread_pool_create(thread_pool_t* tpool) {
   int err = 0; // controle de erros
   int total_errors = 0; // total de erros ocorridos
@@ -35,6 +42,12 @@ int thread_pool_create(thread_pool_t* tpool) {
   return total_errors;
 }
 
+/*
+  Inicializa os membros de uma struct conn_queue_t
+
+  @param queue: fila à ser inicializada
+  @param capacity: capacidade máxima de conexões que podem ser enfileiradas
+*/
 int conn_queue_init(conn_queue_t* queue, size_t capacity) {
   if(capacity == 0)
     return -1;
@@ -59,6 +72,12 @@ int conn_queue_init(conn_queue_t* queue, size_t capacity) {
   return 0;
 }
 
+/*
+  Enfileira uma conexão para ser consumida por uma das threads da pool
+
+  @param queue: fila em que @conn_fd será inserido
+  @param conn_fd: file descriptor da conexão a ser enfileirada
+*/
 int conn_enqueue(conn_queue_t* queue, int conn_fd) {
   // adquire a mutex para fazer alterações na fila
   pthread_mutex_lock(&queue->mu);
@@ -81,6 +100,11 @@ int conn_enqueue(conn_queue_t* queue, int conn_fd) {
   return 0;
 }
 
+/*
+  Retira uma conexão da fila (usado pelas threads da pool)
+
+  @param queue: fila em que a conexão será retirada
+*/
 int conn_dequeue(conn_queue_t* queue) {
   // verifica se há alguma conexão a ser gerenciada, se não, espera por uma
   sem_wait(&queue->semaphore);
@@ -97,4 +121,16 @@ int conn_dequeue(conn_queue_t* queue) {
 
   // retorna o file descriptor da conexão
   return ret_val;
+}
+
+/*
+  Destrói uma conn_queue_t, liberando seus recursos
+
+  @param queue: fila a ser destruída
+*/
+int conn_queue_destroy(conn_queue_t* queue) {
+  free(queue->connections);
+  pthread_mutex_destroy(&queue->mu);
+  sem_destroy(&queue->semaphore);
+  memset(queue, 0, sizeof(*queue));
 }

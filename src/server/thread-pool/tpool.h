@@ -48,11 +48,14 @@ int conn_queue_init(conn_queue_t* queue, size_t capacity);
 
 /*
   Enfileira uma conexão para ser consumida por uma das threads da pool
+
+  @param queue: fila em que @conn_fd será inserido
+  @param conn_fd: file descriptor da conexão a ser enfileirada
 */
 int conn_enqueue(conn_queue_t* queue, int conn_fd);
 
 /*
-  Retira uma conexão da fila (usado pela threads da pool)
+  Retira uma conexão da fila (usado pelas threads da pool)
 
   @param queue: fila em que a conexão será retirada
 */
