@@ -52,7 +52,7 @@ int thread_pool_init(thread_pool_t* tpool, routine_t routine, void* args);
   @param queue: fila à ser inicializada
   @param capacity: capacidade máxima de conexões que podem ser enfileiradas
 */
-int conn_queue_init(conn_queue_t* queue, size_t capacity);
+void conn_queue_init(conn_queue_t* queue, size_t capacity);
 
 /*
   Enfileira uma conexão para ser consumida por uma das threads da pool

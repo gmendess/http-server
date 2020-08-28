@@ -50,10 +50,7 @@ int thread_pool_init(thread_pool_t* tpool, routine_t routine, void* args) {
   @param queue: fila à ser inicializada
   @param capacity: capacidade máxima de conexões que podem ser enfileiradas
 */
-int conn_queue_init(conn_queue_t* queue, size_t capacity) {
-  if(capacity == 0)
-    return -1;
-
+void conn_queue_init(conn_queue_t* queue, size_t capacity) {
   int err = 0; // controle de erros
 
   err |= pthread_mutex_init(&queue->mu, NULL);  
@@ -70,8 +67,6 @@ int conn_queue_init(conn_queue_t* queue, size_t capacity) {
   queue->head     = 0;
   queue->tail     = 0;
   queue->counter  = 0;
-
-  return 0;
 }
 
 /*
