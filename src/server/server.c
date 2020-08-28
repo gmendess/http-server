@@ -30,14 +30,6 @@
 #include "thread-pool/tpool.h"
 
 /*
-  Argumento passado para thread_acquire_connection
-*/
-typedef struct {
-  server_t*     server;
-  conn_queue_t* queue;
-} thread_arg_t;
-
-/*
   Percorre a lista encadeada @ai tentando criar um socket e associá-lo à algum endereço dessa lista
 
   @param server: servidor que terá o socket associado à um endereço de @ai
@@ -119,31 +111,37 @@ static void handle_request(server_t* server, int clientfd) {
   recv(clientfd, buffer, sizeof(buffer), 0);
 
   request_t req = {0};
-  if( (err = parse_request(buffer, &req)) != 0 ) {
+  if( (err = parse_request(buffer, &req)) != 0 )
     http_error("parse_request", err);
-    exit(EXIT_FAILURE);
+  else {
+    // response padrão
+    response_t resp = {0};
+    resp.clientfd = clientfd;
+    resp.status = OK;
+    add_header_field(&resp.header, "Date", gmt_date_now());
+
+    route_t* route = NULL;
+    err = find_route(server, req.req_line.path, req.req_line.method, &route);
+    if(err == ERR_ROUTENOTFOUND)
+      send_default_404(&resp);
+    else if(err == ERR_ROUTEMET)
+      send_default_405(&resp);
+    else
+      route->handler(&resp, &req);
+
+    // libera memória alocada para o header da resposta
+    free_header(&resp.header);
   }
 
-  // response padrão
-  response_t resp = {0};
-  resp.clientfd = clientfd;
-  resp.status = OK;
-  add_header_field(&resp.header, "Date", gmt_date_now());
-
-  route_t* route = NULL;
-  err = find_route(server, req.req_line.path, req.req_line.method, &route);
-  if(err == ERR_ROUTENOTFOUND)
-    send_default_404(&resp);
-  else if(err == ERR_ROUTEMET)
-    send_default_405(&resp);
-  else
-    route->handler(&resp, &req);
-
+  // libera memória alocada para conter informações sobre a requisição
   free_request(&req);
-  free_header(&resp.header);
-  free_server(server);
 
-  exit(EXIT_SUCCESS);
+  // caso o servidor use processos filhos para lidar com cada conexão libera sua 
+  // memória e encerra o programa
+  if(server->type == FORKED) {
+    free_server(server);
+    exit(err);
+  }
 }
 
 /*
@@ -153,16 +151,16 @@ static void handle_request(server_t* server, int clientfd) {
   @param args: espera-se que seja um conn_queue_t* (@args é convertido no corpo da função)
 */
 static void* thread_acquire_connection(void* args) {
-  thread_arg_t* t_args = args; // converte void* para thread_arg_t*
+  server_t* server = args; // converte void* para server_t*
 
-  puts("thread iniciada!");
+  //puts("thread iniciada!");
 
   int conn = 0;
   while(1) {
-    puts("esperando por conexão!");
-    conn = conn_dequeue(t_args->queue);
-    puts("conexão adquirida!");
-    handle_request(t_args->server, conn);
+    //puts("esperando por conexão!");
+    conn = conn_dequeue(server->queue);
+    //puts("conexão adquirida!");
+    handle_request(server, conn);
   }
 
   return 0;
@@ -234,12 +232,18 @@ int start_listening(server_t* server) {
   if(listen(server->listener, BACKLOG) == -1)
     return ERR_LISTEN;
 
-  // configurando handler para SIGCHLD
-  struct sigaction sa = {0};
-  sa.sa_handler = sigchld_handler; // função handler do sinal
-  sa.sa_flags   = SA_RESTART;      // reinicia uma syscall que foi interrompida pelo sinal
-  sigemptyset(&sa.sa_mask);        // zera a máscara de sinais a serem bloqueados
-  sigaction(SIGCHLD, &sa, NULL);   // configura a ação a ser tomada ao receber um SIGCHLD
+  if(server->type == THREADED) {
+    thread_pool_t tpool = {0};
+    thread_pool_init(&tpool, thread_acquire_connection, (void*) server);
+  }
+  else {
+    // configurando handler para SIGCHLD
+    struct sigaction sa = {0};
+    sa.sa_handler = sigchld_handler; // função handler do sinal
+    sa.sa_flags   = SA_RESTART;      // reinicia uma syscall que foi interrompida pelo sinal
+    sigemptyset(&sa.sa_mask);        // zera a máscara de sinais a serem bloqueados
+    sigaction(SIGCHLD, &sa, NULL);   // configura a ação a ser tomada ao receber um SIGCHLD
+  }
 
   // loop infinito para ficar aceitando por requisições
   while(1) {
@@ -253,21 +257,27 @@ int start_listening(server_t* server) {
       continue;
     }
 
-    // cria um processo filho para lidar com a requisição
-    pid_t pid = fork();
-    if(pid == 0) {
-      // processo filho
-      close(server->listener); // fecha o socket do listener, pois o processo filho não precisa dele
-      server->listener = -1;   // configura o socket como um inválido, por favor, não usar
-      handle_request(server, clientfd); // lida com a requisição
+    if(server->type == THREADED ) {
+      if(conn_enqueue(server->queue, clientfd) != 0)
+        fprintf(stderr, "fila de conexões cheia! Não foi possível inserir o file descriptor %d.\n", clientfd);
     }
-    else if(pid > 0) {
-      // processo pai
-      close(clientfd); // fecha o socket do cliente, pois o processo pai não precisa dele
-      puts("Requisição aceita!");
+    else {
+      // cria um processo filho para lidar com a requisição
+      pid_t pid = fork();
+      if(pid == 0) {
+        // processo filho
+        close(server->listener); // fecha o socket do listener, pois o processo filho não precisa dele
+        server->listener = -1;   // configura o socket como um inválido, por favor, não usar
+        handle_request(server, clientfd); // lida com a requisição
+      }
+      else if(pid > 0) {
+        // processo pai
+        close(clientfd); // fecha o socket do cliente, pois o processo pai não precisa dele
+        puts("Requisição aceita!");
+      }
+      else
+        perror("fork");
     }
-    else
-      perror("fork");
 
   }
 
