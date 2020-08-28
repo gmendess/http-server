@@ -9,9 +9,11 @@
   Inicia uma struct thread_pool_t com seus valores padrões e cria a quantidade de threads
   especificadas por THREAD_POOL_MAX_SIZE
 
-  param tpool: ponteiro para struct thread_pool_t que será inicializada
+  @param tpool:   ponteiro para struct thread_pool_t que será inicializada
+  @param routine: rotina a ser executada por cada thread
+  @param args:    argumento para @routine
 */
-int thread_pool_create(thread_pool_t* tpool) {
+int thread_pool_init(thread_pool_t* tpool, routine_t routine, void* args) {
   int err = 0; // controle de erros
   int total_errors = 0; // total de erros ocorridos
 
@@ -27,8 +29,8 @@ int thread_pool_create(thread_pool_t* tpool) {
   // tenta criar a quantidade de threads especificada por THREAD_POOL_MAX_SIZE 
   for(int i = 0; i < THREAD_POOL_MAX_SIZE; i++) {
     // cria a thread
-    err = pthread_create(&tpool->threads[tpool->counter], &attr, NULL/*routine*/, NULL);
-    
+    err = pthread_create(&tpool->threads[tpool->counter], &attr, routine, args);
+
     // verifica se ocorreu erro na criação
     if(err != 0) {
       perror("pthread_create");
@@ -128,7 +130,7 @@ int conn_dequeue(conn_queue_t* queue) {
 
   @param queue: fila a ser destruída
 */
-int conn_queue_destroy(conn_queue_t* queue) {
+void conn_queue_destroy(conn_queue_t* queue) {
   free(queue->connections);
   pthread_mutex_destroy(&queue->mu);
   sem_destroy(&queue->semaphore);
