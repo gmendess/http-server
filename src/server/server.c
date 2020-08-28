@@ -27,6 +27,15 @@
 #include "../errors/errors.h"
 #include "../http/request/request.h"
 #include "../http/response/response.h"
+#include "thread-pool/tpool.h"
+
+/*
+  Argumento passado para thread_acquire_connection
+*/
+typedef struct {
+  server_t*     server;
+  conn_queue_t* queue;
+} thread_arg_t;
 
 /*
   Percorre a lista encadeada @ai tentando criar um socket e associá-lo à algum endereço dessa lista
@@ -135,6 +144,28 @@ static void handle_request(server_t* server, int clientfd) {
   free_server(server);
 
   exit(EXIT_SUCCESS);
+}
+
+/*
+  Função estática que monitora a fila de conexões para poder adquirir uma conexão e poder
+  gerenciá-la. É usada quando o servidor é configurado para ser um threaded-server
+
+  @param args: espera-se que seja um conn_queue_t* (@args é convertido no corpo da função)
+*/
+static void* thread_acquire_connection(void* args) {
+  thread_arg_t* t_args = args; // converte void* para thread_arg_t*
+
+  puts("thread iniciada!");
+
+  int conn = 0;
+  while(1) {
+    puts("esperando por conexão!");
+    conn = conn_dequeue(t_args->queue);
+    puts("conexão adquirida!");
+    handle_request(t_args->server, conn);
+  }
+
+  return 0;
 }
 
 /*
