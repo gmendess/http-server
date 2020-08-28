@@ -30,13 +30,21 @@ typedef struct {
   int*   connections; // vetor que cada conexão(file descriptor) será enfileirada
 } conn_queue_t;
 
+/* 
+  Syntax-sugar para ponteiro para função que receber um void* e retorna um void*.
+  Basicamente é a rotina que cada thread (de uma thread pool) executará.
+*/
+typedef void*(*routine_t)(void*);
+
 /*
   Inicia uma struct thread_pool_t com seus valores padrões e cria a quantidade de threads
   especificadas por THREAD_POOL_MAX_SIZE
 
-  param tpool: ponteiro para struct thread_pool_t que será inicializada
+  @param tpool: ponteiro para struct thread_pool_t que será inicializada
+  @param server: servidor que essa thread pool será responsável por gerenciar as conexões
+  @param queue: fila que as threads da pool ficarão monitorando e esperando por conexões
 */
-int thread_pool_create(thread_pool_t* tpool);
+int thread_pool_init(thread_pool_t* tpool, routine_t routine, void* args);
 
 /*
   Inicializa os membros de uma struct conn_queue_t
@@ -66,6 +74,6 @@ int conn_dequeue(conn_queue_t* queue);
 
   @param queue: fila a ser destruída
 */
-int conn_queue_destroy(conn_queue_t* queue);
+void conn_queue_destroy(conn_queue_t* queue);
 
 #endif // __THREAD_POOL_H
