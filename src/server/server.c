@@ -181,6 +181,9 @@ int new_http_server(server_t* server, const char* addr, const char* port) {
   // lista de rotas vazia
   server->route = NULL;
 
+  // inicialmente não instancia nenhum fila de conexões (ver config_threaded_server)
+  server->queue = NULL;
+
   struct addrinfo hints = {0};
   hints.ai_family   = AF_UNSPEC;   // IPv4 ou IPv6
   hints.ai_socktype = SOCK_STREAM; // tcp
@@ -199,6 +202,24 @@ int new_http_server(server_t* server, const char* addr, const char* port) {
     return err;
 
   return 0;
+}
+
+/*
+  Configura o servidor para ser um threaded server, ou seja, ele usará uma thread para lidar com cada
+  conexão. Essas threads fazem parte de uma thread pool.
+
+  @param server: servidor a ser configurado
+  @param queue_size: tamanho da fila de conexões; cada conexão aceita será enfileirada e posteriormente
+   pega por uma thread que estiver disponível na pool. 
+*/
+void config_threaded_server(server_t* server, size_t queue_size) {
+  server->type = THREADED;
+  server->queue = must_calloc(1, sizeof(conn_queue_t));
+
+  // se queue_size for 0, configura para o valor padrão  10
+  queue_size = (queue_size > 0) ? queue_size : 10;
+
+  conn_queue_init(server->queue, queue_size);
 }
 
 /*
