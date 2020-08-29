@@ -45,6 +45,13 @@ int parse_lines(char* buffer, char*** str_array, int lines);
 void sigchld_handler(int sig);
 
 /*
+  Handler para lidar com SIGINT (interrupção vinda do teclado [CTRL + C])
+
+  @param sig: número do sinal recebido
+*/
+void sigint_handler(int sig);
+
+/*
   Adquire o endereço e a porta de uma estrutura de endereço (sockaddr_in e sockaddr_in6)
 
   @param sa: estrutura do endereço

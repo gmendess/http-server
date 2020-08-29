@@ -125,6 +125,10 @@ void sigchld_handler(int sig) {
   }
 }
 
+void sigint_handler(int sig) {
+  write(2, "\nSIGINT recebido! O servidor será desligado!\n", 46);
+}
+
 /*
   Adquire o endereço IP e a porta de uma estrutura de endereço (sockaddr_in e sockaddr_in6)
 

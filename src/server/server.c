@@ -22,6 +22,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <string.h>
+#include <errno.h>
 #include "server.h"
 #include "../util/util.h"
 #include "../errors/errors.h"
@@ -232,13 +233,18 @@ int start_listening(server_t* server) {
   if(listen(server->listener, BACKLOG) == -1)
     return ERR_LISTEN;
 
+  // variável para configurar handler de sinais
+  struct sigaction sa = {0};
+  sa.sa_handler = sigint_handler; // função handler para SIGINT
+  sigemptyset(&sa.sa_mask);       // zera a máscara de sinais a serem bloqueados
+  sigaction(SIGINT, &sa, NULL);   // configura o handler para SIGINT
+
   if(server->type == THREADED) {
     thread_pool_t tpool = {0};
     thread_pool_init(&tpool, thread_acquire_connection, (void*) server);
   }
   else {
     // configurando handler para SIGCHLD
-    struct sigaction sa = {0};
     sa.sa_handler = sigchld_handler; // função handler do sinal
     sa.sa_flags   = SA_RESTART;      // reinicia uma syscall que foi interrompida pelo sinal
     sigemptyset(&sa.sa_mask);        // zera a máscara de sinais a serem bloqueados
@@ -253,6 +259,8 @@ int start_listening(server_t* server) {
     // aceita uma conexão com o cliente
     int clientfd = accept(server->listener, (struct sockaddr*) &ss, &size);
     if(clientfd == -1) {
+      if(errno == EINTR)
+        break; // SIGINT recebido, encerra o loop
       perror("accept");
       continue;
     }
