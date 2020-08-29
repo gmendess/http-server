@@ -20,16 +20,10 @@ int thread_pool_init(thread_pool_t* tpool, routine_t routine, void* args) {
   // zero threads ativas
   tpool->counter = 0;
 
-  // cria atributo das threads, no caso, cada thread criada será "detached", para ter seus
-  // recursos liberados logo após o término.
-  pthread_attr_t attr;
-  pthread_attr_init(&attr);
-  pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-
   // tenta criar a quantidade de threads especificada por THREAD_POOL_MAX_SIZE 
   for(int i = 0; i < THREAD_POOL_MAX_SIZE; i++) {
     // cria a thread
-    err = pthread_create(&tpool->threads[tpool->counter], &attr, routine, args);
+    err = pthread_create(&tpool->threads[tpool->counter], NULL, routine, args);
 
     // verifica se ocorreu erro na criação
     if(err != 0) {
@@ -39,9 +33,6 @@ int thread_pool_init(thread_pool_t* tpool, routine_t routine, void* args) {
     else
       tpool->counter++; // se não ocorreu nenhum erro, incrementa o contador de threads ativas
   }
-
-  // libera memória de attr
-  pthread_attr_destroy(&attr);
 
   // retorna número de erros
   return total_errors;
@@ -55,6 +46,9 @@ int thread_pool_init(thread_pool_t* tpool, routine_t routine, void* args) {
 */
 void conn_queue_init(conn_queue_t* queue, size_t capacity) {
   int err = 0; // controle de erros
+
+  // configura flag para verdadeiro
+  queue->is_open = 1;
 
   err |= pthread_mutex_init(&queue->mu, NULL);  
   err |= sem_init(&queue->semaphore, 0, 0);
@@ -79,6 +73,10 @@ void conn_queue_init(conn_queue_t* queue, size_t capacity) {
   @param conn_fd: file descriptor da conexão a ser enfileirada
 */
 int conn_enqueue(conn_queue_t* queue, int conn_fd) {
+  // fila fechada, não pode enfileirar mais nada
+  if(!queue->is_open)
+    return -1;
+
   // adquire a mutex para fazer alterações na fila
   pthread_mutex_lock(&queue->mu);
   
@@ -108,6 +106,11 @@ int conn_enqueue(conn_queue_t* queue, int conn_fd) {
 int conn_dequeue(conn_queue_t* queue) {
   // verifica se há alguma conexão a ser gerenciada, se não, espera por uma
   sem_wait(&queue->semaphore);
+
+  // verifica se a fila está aberta para enfileirar a conexão, se não estiver, significa
+  // que o servidor fechou a fila
+  if(!queue->is_open)
+    return -1;
 
   // adquire mutex para fazer alterações e leitura na fila
   pthread_mutex_lock(&queue->mu);

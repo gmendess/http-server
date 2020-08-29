@@ -2,6 +2,7 @@
 #define __THREAD_POOL_H
 #include <pthread.h>
 #include <semaphore.h>
+#include <stdatomic.h>
 
 #define THREAD_POOL_MAX_SIZE 16
 
@@ -21,13 +22,14 @@ typedef struct {
   para simular uma circularidade, isso fica mais claro nas funções enqueue e dequeue
 */
 typedef struct {
-  pthread_mutex_t mu; // mutex para evitar race condition nos membros dessa struct
-  sem_t  semaphore;   // semáforo para indicar quando há conexões a serem retiradas da fila
-  size_t head;        // índice que corresponde ao inicio da fila (não é necessariamente 0)
-  size_t tail;        // índice que corresponde ao final da fila, ou seja, onde o próximo elemento será adicionado
-  size_t counter;     // número atual de elementos
-  size_t capacity;    // capacidade máxima da fila
-  int*   connections; // vetor que cada conexão(file descriptor) será enfileirada
+  pthread_mutex_t mu;      // mutex para evitar race condition nos membros dessa struct
+  sem_t       semaphore;   // semáforo para indicar quando há conexões a serem retiradas da fila
+  size_t      head;        // índice que corresponde ao inicio da fila (não é necessariamente 0)
+  size_t      tail;        // índice que corresponde ao final da fila, ou seja, onde o próximo elemento será adicionado
+  size_t      counter;     // número atual de elementos
+  size_t      capacity;    // capacidade máxima da fila
+  atomic_bool is_open;     // flag que indica se a fila está aberta para receber ou retirar conexões
+  int*        connections; // vetor que cada conexão(file descriptor) será enfileirada
 } conn_queue_t;
 
 /* 

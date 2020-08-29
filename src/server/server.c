@@ -95,6 +95,11 @@ static void free_server(server_t* server) {
     free(prev);
   }
 
+  if(server->type == THREADED) {
+    conn_queue_destroy(server->queue);
+    free(server->queue);
+  }
+
   if(server->listener >= 0)
     close(server->listener);
 }
@@ -154,14 +159,14 @@ static void handle_request(server_t* server, int clientfd) {
 static void* thread_acquire_connection(void* args) {
   server_t* server = args; // converte void* para server_t*
 
-  //puts("thread iniciada!");
-
   int conn = 0;
   while(1) {
-    //puts("esperando por conexão!");
     conn = conn_dequeue(server->queue);
-    //puts("conexão adquirida!");
+    if(conn == -1)
+      break; // fila foi fechada, não é mais possíve retirar mais nada dela
+
     handle_request(server, conn);
+    close(conn);
   }
 
   return 0;
@@ -239,8 +244,8 @@ int start_listening(server_t* server) {
   sigemptyset(&sa.sa_mask);       // zera a máscara de sinais a serem bloqueados
   sigaction(SIGINT, &sa, NULL);   // configura o handler para SIGINT
 
+  thread_pool_t tpool = {0};
   if(server->type == THREADED) {
-    thread_pool_t tpool = {0};
     thread_pool_init(&tpool, thread_acquire_connection, (void*) server);
   }
   else {
@@ -289,6 +294,30 @@ int start_listening(server_t* server) {
 
   }
 
+  // verifica se é um threaded-server para sincronizar o término do servidor com o término das threads da pool
+  if(server->type == THREADED) {
+    /*
+      EXPLICAÇÃO: não sei se há forma melhor de fazer isso, mas ok. Basicamente a  fila de conexões tem uma flag chamada `is_open`, essa flag é uma
+        variável atômica,  dessa forma, sua leitura e escrita  são garantidas de  serem thread-safe. Quando o  servidor recebe um  SIGINT, o código
+        abaixo será executado, marcando a  flag da fila como false, e depois disso incrementando o  contador do semáforo pela quantidade de threads
+        existentes na pool. Isso fará com que threads que estejam bloqueadas num sem_wait (ver conn_dequeue) acordem; após acordarem elas verificam
+        a flag `is_open`, retornando -1 caso a fila esteja fechada. Depois disso, o servidor espera que todas as threads da pool terminem, ou seja,
+        espera que todas as requisições em andamento terminem. Por fim, a memória do servidor é liberada.
+    */
+
+    // fecha a fila de conexões para não poder ser mais manipulada
+    server->queue->is_open = 0;
+
+    // acorda todas as threads da pool que estiverem bloqueadas em um sem_wait
+    for(int x = 0; x < tpool.counter; x++)
+      sem_post(&server->queue->semaphore);
+
+    // aguarda a finalização das threads
+    for(int x = 0; x < tpool.counter; x++)
+      pthread_join(tpool.threads[x], NULL);
+  }
+
+  // libera a memória do servidor
   free_server(server);
   return 0;
 }
