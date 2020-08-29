@@ -36,6 +36,8 @@ int main() {
     return EXIT_FAILURE;
   }
 
+  config_threaded_server(&server, 20);
+
   if( (err = handle_route(&server, "/api/getPerson", home_handler, GET)) != 0)
     http_error("handle_route", err);
 
