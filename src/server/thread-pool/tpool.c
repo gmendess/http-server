@@ -40,6 +40,9 @@ int thread_pool_init(thread_pool_t* tpool, routine_t routine, void* args) {
       tpool->counter++; // se não ocorreu nenhum erro, incrementa o contador de threads ativas
   }
 
+  // libera memória de attr
+  pthread_attr_destroy(&attr);
+
   // retorna número de erros
   return total_errors;
 }
