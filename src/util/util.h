@@ -86,4 +86,13 @@ const char* gmt_date_now();
 */
 void* must_calloc(size_t num_elements, size_t size);
 
+/*
+  Mesma coisa que um realloc, contudo encerra o programa caso ocorra erro ao realocar
+  a memória solicitada.
+
+  @param ptr: ponteiro para uma região previamente alocada dinamicamente
+  @param new_size: novo tamanho da região de memória
+*/
+void* must_realloc(void* ptr, size_t new_size);
+
 #endif // __HTTP_UTIL_H

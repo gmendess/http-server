@@ -21,11 +21,7 @@ int string_append(string_t* str, const char* buffer) {
   if(str->length + buffer_len + 1 > str->capacity) {
     // dobra a capacidade e adiciono o tamanho do buffer + null char
     str->capacity = (str->capacity * 2) + buffer_len + 1;
-    str->buffer = realloc(str->buffer, str->capacity);
-    if(!str->buffer) {
-      perror("string_append: realloc");
-      exit(EXIT_FAILURE);
-    }
+    str->buffer = must_realloc(str->buffer, str->capacity);
   }
 
   memcpy(str->buffer + str->length, buffer, buffer_len + 1);

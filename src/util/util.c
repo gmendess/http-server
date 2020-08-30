@@ -81,11 +81,7 @@ int parse_lines(char* buffer, char*** str_array, int lines) {
   while(token) {
     if(lines == curr_line) {
       lines++;
-      *str_array = realloc(*str_array, lines * sizeof(char*));
-      if(*str_array == NULL) {
-        perror("realloc");
-        exit(EXIT_FAILURE);
-      }
+      *str_array = must_realloc(*str_array, lines * sizeof(char*));
     }
 
     (*str_array)[curr_line] = make_copy(token);
@@ -180,6 +176,15 @@ void* must_calloc(size_t num_elements, size_t size) {
   void* ptr = calloc(num_elements, size);
   if(ptr == NULL) {
     perror("calloc");
+    exit(EXIT_FAILURE);
+  }
+  return ptr;
+}
+
+void* must_realloc(void* ptr, size_t new_size) {
+  ptr = realloc(ptr, new_size);
+  if(ptr == NULL) {
+    perror("realloc");
     exit(EXIT_FAILURE);
   }
   return ptr;
