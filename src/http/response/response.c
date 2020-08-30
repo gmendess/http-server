@@ -3,6 +3,7 @@
 #include <string.h>
 #include "response.h"
 #include "../../util/util.h"
+#include "../../util/string.h"
 
 static int send_all(int client_fd, const char* buffer, size_t len) {
   // ponteiro para o buffer. Esse ponteiro será deslocado
@@ -10,7 +11,7 @@ static int send_all(int client_fd, const char* buffer, size_t len) {
 
   // enquanto o tamanho do buffer for maior que zero, significa que ainda há bytes para serem enviados
   while(len > 0) {
-    int bytes_sent = send(client_fd, ptr, len, MSG_NOSIGNAL);
+    ssize_t bytes_sent = send(client_fd, ptr, len, MSG_NOSIGNAL);
     if(bytes_sent == -1)
       return ERR_SEND;
 
@@ -27,25 +28,30 @@ static int send_all(int client_fd, const char* buffer, size_t len) {
   @param body: corpo da resposta, pode ser NULL
 */
 int send_http_response(response_t* resp, const char* body) {
-  char buf[32768] = {0};
-  int offset = 0;
+  string_t r;
+  string_init(&r, 1024);
 
-  offset += snprintf(&buf[offset], sizeof(buf) - offset, "HTTP/1.1 %d %s\r\n", resp->status, get_http_status_description(resp->status));
+  char buffer[2048] = {0};
 
-  header_field_t* aux = resp->header.field;
-  while(aux) {
-    offset += snprintf(&buf[offset], sizeof(buf) - offset, "%s: %s\r\n", aux->name, aux->value);
-    aux = aux->next;
+  // Send-line da resposta (Versão, status e descrição do status)
+  snprintf(buffer, sizeof(buffer), "HTTP/1.1 %d %s\r\n", resp->status, get_http_status_description(resp->status));
+  string_append(&r, buffer);
+
+  // adiciona todos os header da resposta
+  for(header_field_t* field = resp->header.field; field; field = field->next) {
+    snprintf(buffer, sizeof(buffer), "%s: %s\r\n", field->name, field->value);
+    string_append(&r, buffer);
   }
 
-  if(body) {
-    offset += snprintf(&buf[offset], sizeof(buf) - offset, "Content-Length: %lu\r\n\r\n", strlen(body));
-    offset += snprintf(&buf[offset], sizeof(buf) - offset, "%s", body);
-  }
-  else
-    offset += snprintf(&buf[offset], sizeof(buf) - offset, "\r\n");
+  // Content-Length e body da resposta
+  snprintf(buffer, sizeof(buffer), "Content-Length: %lu\r\n\r\n", strlen(body));
+  string_append(&r, buffer);
+  string_append(&r, body);
 
-  return send_all(resp->clientfd, buf, offset);
+  send_all(resp->clientfd, r.buffer, r.length);
+  string_destroy(&r);
+
+  return 0;
 }
 
 int send_default_200(response_t* resp) {
