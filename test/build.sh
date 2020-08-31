@@ -6,6 +6,7 @@ gcc -c -Wall ../src/server/server.c -o ../obj/server.o
 gcc -c -Wall ../src/server/thread-pool/tpool.c -o ../obj/tpool.o
 gcc -c -Wall ../src/util/util.c -o ../obj/util.o
 gcc -c -Wall ../src/util/string.c -o ../obj/string.o
+gcc -c -Wall ../src/util/hmap.c -o ../obj/hmap.o
 gcc -c -Wall ../src/errors/errors.c -o ../obj/errors.o
 gcc -c -Wall ../src/http/request/request.c -o ../obj/request.o
 gcc -c -Wall ../src/http/request/methods/methods.c -o ../obj/methods.o
