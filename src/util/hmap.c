@@ -22,7 +22,7 @@ void hmap_init(hmap_t* hmap, size_t capacity) {
 
   hmap->capacity = capacity;
   hmap->counter  = 0;
-  hmap->entries = must_calloc(capacity, sizeof(hmap_entry_t));
+  hmap->entries  = must_calloc(capacity, sizeof(hmap_entry_t));
 }
 
 void hmap_destroy(hmap_t* hmap) {
@@ -38,9 +38,23 @@ int hmap_add(hmap_t* hmap, char* key, void* value) {
   if(hmap->counter == hmap->capacity)
     return -1;
 
-  hmap->entries[index].key = key;
-  hmap->entries[index].value = value;
+  hmap->entries[index].key      = key;
+  hmap->entries[index].value    = value;
+  hmap->entries[index].occupied = 1;
   hmap->counter++;
 
-  return index;
+  return 0;
+}
+
+int hmap_get(hmap_t* hmap, char* key, void** output) {
+  if(hmap->counter == 0)
+    return HMAP_NOT_FOUND;
+
+  ussize_t index = djb2_hash(key) % hmap->capacity;
+  if(!hmap->entries[index].occupied)
+    return HMAP_NOT_FOUND;
+
+  *output = hmap->entries[index].value;
+
+  return 0;
 }
