@@ -28,7 +28,7 @@ typedef struct request_line {
 typedef struct request {
   request_line_t  req_line; // request line
   hmap_t header;            // hash map de cada campo do header
-  char*  body;              // corpo da requisição (NULL se não houver)
+  char*  body;              // corpo da requisição ("" se não houver)
 } request_t;
 
 /*

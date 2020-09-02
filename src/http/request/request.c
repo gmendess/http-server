@@ -102,7 +102,7 @@ int get_request_body(char* req_buffer, char** body_out) {
 
   // body vazio
   if(body[4] == '\0')
-    *body_out = NULL;
+    *body_out = make_copy("");
   else {
     *body = '\0'; // null char para separar o header do body
     body += 4;    // incrementa o body para pular os "\0\n\r\n"
