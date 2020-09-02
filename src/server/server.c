@@ -117,11 +117,15 @@ static void handle_request(server_t* server, int clientfd) {
   recv(clientfd, buffer, sizeof(buffer), 0);
 
   request_t req = {0};
+  hmap_init(&req.header, 256);
+
   if( (err = parse_request(buffer, &req)) != 0 )
     http_error("parse_request", err);
   else {
     // response padrão
     response_t resp = {0};
+    hmap_init(&resp.header, 256);
+
     resp.clientfd = clientfd;
     resp.status = OK;
     add_header_field(&resp.header, "Date", gmt_date_now());
@@ -136,10 +140,12 @@ static void handle_request(server_t* server, int clientfd) {
       route->handler(&resp, &req);
 
     // libera memória alocada para o header da resposta
-    free_header(&resp.header);
+    hmap_iterate(&resp.header, free_header_field, NULL);
+    hmap_destroy(&resp.header);
   }
 
   // libera memória alocada para conter informações sobre a requisição
+  hmap_iterate(&req.header, free_header_field, NULL);
   free_request(&req);
 
   // caso o servidor use processos filhos para lidar com cada conexão libera sua 

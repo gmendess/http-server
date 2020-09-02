@@ -3,6 +3,7 @@
 
 #include "methods/methods.h"
 #include "../header/header.h"
+#include "../../util/hmap.h"
 
 /*
   Estrutura que contém a versão do protocolo HTTP
@@ -26,7 +27,7 @@ typedef struct request_line {
 */
 typedef struct request {
   request_line_t  req_line; // request line
-  header_t header;          // lista encadeada de cada campo do header
+  hmap_t header;            // hash map de cada campo do header
   char*  body;              // corpo da requisição (NULL se não houver)
 } request_t;
 

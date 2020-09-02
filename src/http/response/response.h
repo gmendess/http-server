@@ -12,7 +12,7 @@
 typedef struct {
   int              clientfd; // socket do cliente
   http_status_code_t status; // status da resposta HTTP
-  header_t           header; // lista encadeada de campos do header
+  hmap_t             header; // hash map dos campos do header
 } response_t;
 
 /*

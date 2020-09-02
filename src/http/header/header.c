@@ -2,34 +2,36 @@
 #include <stdio.h>
 #include <string.h>
 #include "../../util/util.h"
+#include "../../util/hmap.h"
 #include "../../errors/errors.h"
 #include "header.h"
 
 /*
-  Adiciona um nó à lista encadeada apontada por @header
+  Adiciona uma entry na hash map apontada por @header
 
-  @param header: lista encadeada de header_field_t
+  @param header: hash map de header_field_t
   @param field: nome de um campo do header
   @param value: conteúdo do campo do header de nome @field
 */
-void add_header_field(header_t* header, const char* field, const char* value) {
+void add_header_field(hmap_t* header, const char* field, const char* value) {
   header_field_t* new = must_calloc(1, sizeof(*new));
 
   new->name  = make_copy(field);
   new->value = make_copy(value);
-  new->next  = header->field;
 
-  header->field = new;
+  hmap_set(header, new->name, new);
 }
 
 /*
-  Analisa o header de uma requisição/resposta HTTP criando um header_field_t para cada campo.
+  Analisa o header de uma requisição/resposta HTTP criando um header_field_t para cada campo e
+  o adicionando em uma hash map.
+  Retorna diferente de 0 em caso de erro
 
   @param header_lines: vetor de strings que contém cada linha do header
   @param len: quantidade de linha de @header_lines
-  @param header: lista encadeada de header_field_t (cada campo do header)
+  @param header: hash map que conterá cada campo do header da requisição
 */
-int parse_header_lines(char** header_lines, int header_len, header_t* header) {
+int parse_header_lines(char** header_lines, int header_len, hmap_t* header) {
   char* field = NULL,
       * value = NULL;
 
@@ -50,17 +52,15 @@ int parse_header_lines(char** header_lines, int header_len, header_t* header) {
 }
 
 /*
-  Libera uma lista encadeada de header_field_t
+  Libera um header_field_t
+  Essa função será usada como callback na função hmap_iterate, que percorrerá todas as
+  entries do map, executando essa função abaixo.
 
-  @param header: estrutura que representa a lista encadeada
+  @param value: header_field_t a ter sua memória liberada
 */
-void free_header(header_t* header) {
-  while(header->field) {
-    header_field_t* save_next = header->field->next;
-    free(header->field->name);
-    free(header->field->value);
-    free(header->field);
-    header->field = save_next;
-  }
-  header->field = NULL;
+void free_header_field(const char* _, void* value, void* __) {
+  header_field_t* field = value;
+  free(field->name);
+  free(field->value);
+  free(field);
 }

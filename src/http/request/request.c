@@ -15,7 +15,7 @@
 void free_request(request_t* req) {
   free(req->body);
   free(req->req_line.path);
-  free_header(&req->header);
+  hmap_destroy(&req->header);
 }
 
 /*

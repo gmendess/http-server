@@ -22,6 +22,23 @@ static int send_all(int client_fd, const char* buffer, size_t len) {
 }
 
 /*
+  Função estática auxiliar que montará o header da resposta HTTP. Essa função será 
+  usada como callback na chamada de hmap_iterate.
+
+  @param key: chave de um bucket do map (nome do field do header)
+  @param value: valor da chave correspondente (header_field_t)
+  @param args: ponteiro para string_t
+*/
+static void construct_resp_header(const char* key, void* value, void* args) {
+  header_field_t* field = value;
+  string_t* r = args;
+
+  char buffer[2048] = {0};
+  snprintf(buffer, sizeof(buffer), "%s: %s\r\n", key, field->value);
+  string_append(r, buffer);
+}
+
+/*
   Envia uma resposta HTTP para um cliente.
 
   @param resp: informações sobre status e cabeçalhos da resposta
@@ -37,11 +54,8 @@ int send_http_response(response_t* resp, const char* body) {
   snprintf(buffer, sizeof(buffer), "HTTP/1.1 %d %s\r\n", resp->status, get_http_status_description(resp->status));
   string_append(&r, buffer);
 
-  // adiciona todos os header da resposta
-  for(header_field_t* field = resp->header.field; field; field = field->next) {
-    snprintf(buffer, sizeof(buffer), "%s: %s\r\n", field->name, field->value);
-    string_append(&r, buffer);
-  }
+  //adiciona ao header da resposta todos os campos e valores existentes no map
+  hmap_iterate(&resp->header, construct_resp_header, (void*) &r);
 
   // Content-Length e body da resposta
   snprintf(buffer, sizeof(buffer), "Content-Length: %lu\r\n\r\n", strlen(body));
