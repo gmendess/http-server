@@ -105,3 +105,19 @@ int hmap_get(hmap_t* hmap, char* key, void** output) {
 
   return 0;
 }
+
+void hmap_iterate(hmap_t* hmap, it_function it, void* it_opt_args) {
+  hmap_entry_t* entry = NULL;
+
+  for(int i = 0; i < hmap->buckets; i++) {
+    entry = hmap->entries[i];
+    if(!entry || !entry->occupied)
+      continue;
+
+    while(entry) {
+      it(entry->key, entry->value, it_opt_args);
+      entry = entry->next;
+    }
+
+  } // end for
+}
