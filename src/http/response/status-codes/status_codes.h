@@ -81,4 +81,11 @@ typedef enum {
 */
 const char* get_http_status_description(http_status_code_t status_code);
 
+/*
+  Verica se determinado status de resposta HTTP inclui ou não um body
+
+  @param status_code: status a ser verificado
+*/
+int include_body(http_status_code_t status_code);
+
 #endif // __HTTP_CODES_H

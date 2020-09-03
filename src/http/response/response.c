@@ -57,10 +57,14 @@ int send_http_response(response_t* resp, const char* body) {
   //adiciona ao header da resposta todos os campos e valores existentes no map
   hmap_iterate(&resp->header, construct_resp_header, (void*) &r);
 
-  // Content-Length e body da resposta
-  snprintf(buffer, sizeof(buffer), "Content-Length: %lu\r\n\r\n", strlen(body));
-  string_append(&r, buffer);
-  string_append(&r, body);
+  // verifica se o status da resposta inclui um body
+  if(include_body(resp->status)) {
+    puts("inclui body :)");
+    // Content-Length e body da resposta
+    snprintf(buffer, sizeof(buffer), "Content-Length: %lu\r\n\r\n", strlen(body));
+    string_append(&r, buffer);
+    string_append(&r, body);
+  }
 
   send_all(resp->clientfd, r.buffer, r.length);
   string_destroy(&r);

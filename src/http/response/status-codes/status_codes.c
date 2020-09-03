@@ -167,3 +167,19 @@ const char* get_http_status_description(http_status_code_t status_code) {
       return NULL;
   }
 }
+
+/*
+  Verica se determinado status de resposta HTTP inclui ou não um body
+
+  @param status_code: status a ser verificado
+*/
+int include_body(http_status_code_t status_code) {
+  int status_family = status_code / 100;
+  
+  if(status_family == 1)
+    return 0;
+  else if(status_code == 204 || status_code == 304)
+    return 0;
+  
+  return 1;
+}
