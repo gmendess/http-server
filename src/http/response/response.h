@@ -29,4 +29,6 @@ int send_default_404(response_t* resp);
 
 int send_default_405(response_t* resp);
 
+int send_default_505(response_t* resp);
+
 #endif // __HTTP_RESPONSE_H

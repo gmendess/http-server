@@ -130,6 +130,10 @@ static void handle_request(server_t* server, int clientfd) {
     resp.status = OK;
     add_header_field(&resp.header, "Date", gmt_date_now());
 
+    // major version da requisição não é suportada pelo servidor
+    if(req.req_line.version.major != 1)
+      send_default_505(&resp);
+
     route_t* route = NULL;
     err = find_route(server, req.req_line.path, req.req_line.method, &route);
     if(err == ERR_ROUTENOTFOUND)

@@ -116,3 +116,18 @@ int send_default_405(response_t* resp) {
 
   return send(resp->clientfd, resp_405, strlen(resp_405), 0);
 }
+
+int send_default_505(response_t* resp) {
+  char resp_505[256];
+
+  snprintf(resp_505, sizeof(resp_505), 
+    "HTTP/1.1 505 HTTP Version Not Supported\r\n"          \
+    "Date: %s\r\n"                 \
+    "Content-Type: text/plain\r\n" \
+    "Content-Length: 30\r\n\r\n"    \
+    "505 HTTP Version Not Supported",
+    gmt_date_now()
+  );
+
+  return send(resp->clientfd, resp_505, strlen(resp_505), 0);
+}
