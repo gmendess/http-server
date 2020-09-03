@@ -132,14 +132,14 @@ static void handle_request(server_t* server, int clientfd) {
 
     // major version da requisição não é suportada pelo servidor
     if(req.req_line.version.major != 1)
-      send_default_505(&resp);
+      send_default(&resp, HTTPVersionNotSupported);
 
     route_t* route = NULL;
     err = find_route(server, req.req_line.path, req.req_line.method, &route);
     if(err == ERR_ROUTENOTFOUND)
-      send_default_404(&resp);
+      send_default(&resp, NotFound);
     else if(err == ERR_ROUTEMET)
-      send_default_405(&resp);
+      send_default(&resp, MethodNotAllowed);
     else
       route->handler(&resp, &req);
 

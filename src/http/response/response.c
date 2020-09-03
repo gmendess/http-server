@@ -59,7 +59,6 @@ int send_http_response(response_t* resp, const char* body) {
 
   // verifica se o status da resposta inclui um body
   if(include_body(resp->status)) {
-    puts("inclui body :)");
     // Content-Length e body da resposta
     snprintf(buffer, sizeof(buffer), "Content-Length: %lu\r\n\r\n", strlen(body));
     string_append(&r, buffer);
@@ -72,62 +71,15 @@ int send_http_response(response_t* resp, const char* body) {
   return 0;
 }
 
-int send_default_200(response_t* resp) {
-  char resp_200[256];
+/*
+  Envia uma resposta padrão com base no status passado
 
-  snprintf(resp_200, sizeof(resp_200), 
-    "HTTP/1.1 200 OK\r\n"          \
-    "Date: %s\r\n"                 \
-    "Content-Type: text/plain\r\n" \
-    "Content-Length: 6\r\n\r\n"    \
-    "200 OK",
-    gmt_date_now()
-  );
-
-  return send(resp->clientfd, resp_200, strlen(resp_200), 0);
-}
-
-int send_default_404(response_t* resp) {
-  char resp_404[256];
-
-  snprintf(resp_404, sizeof(resp_404), 
-    "HTTP/1.1 404 Not Found\r\n"    \
-    "Date: %s\r\n"                  \
-    "Content-Type: text/plain\r\n"  \
-    "Content-Length: 13\r\n\r\n"    \
-    "404 Not Found",
-    gmt_date_now()
-  );
-
-  return send(resp->clientfd, resp_404, strlen(resp_404), 0);
-}
-
-int send_default_405(response_t* resp) {
-  char resp_405[256];
-
-  snprintf(resp_405, sizeof(resp_405), 
-    "HTTP/1.1 405 Method Not Allowed\r\n"          \
-    "Date: %s\r\n"                 \
-    "Content-Type: text/plain\r\n" \
-    "Content-Length: 22\r\n\r\n"    \
-    "405 Method Not Allowed",
-    gmt_date_now()
-  );
-
-  return send(resp->clientfd, resp_405, strlen(resp_405), 0);
-}
-
-int send_default_505(response_t* resp) {
-  char resp_505[256];
-
-  snprintf(resp_505, sizeof(resp_505), 
-    "HTTP/1.1 505 HTTP Version Not Supported\r\n"          \
-    "Date: %s\r\n"                 \
-    "Content-Type: text/plain\r\n" \
-    "Content-Length: 30\r\n\r\n"    \
-    "505 HTTP Version Not Supported",
-    gmt_date_now()
-  );
-
-  return send(resp->clientfd, resp_505, strlen(resp_505), 0);
+  @param resp: informações sobre a resposta http
+  @param status_code: status da resposta que identificará a mensagem padrão a ser
+   enviada ao cliente
+*/
+int send_default(response_t* resp, http_status_code_t status_code) {
+  add_header_field(&resp->header, "Content-Type", "text/plain");
+  resp->status = status_code;
+  return send_http_response(resp, get_http_status_description(status_code));
 }

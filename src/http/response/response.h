@@ -23,12 +23,13 @@ typedef struct {
 */
 int send_http_response(response_t* resp, const char* body);
 
-int send_default_200(response_t* resp);
+/*
+  Envia uma resposta padrão com base no status passado
 
-int send_default_404(response_t* resp);
-
-int send_default_405(response_t* resp);
-
-int send_default_505(response_t* resp);
+  @param resp: informações sobre a resposta http
+  @param status_code: status da resposta que identificará a mensagem padrão a ser
+   enviada ao cliente
+*/
+int send_default(response_t* resp, http_status_code_t status_code);
 
 #endif // __HTTP_RESPONSE_H
