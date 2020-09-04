@@ -11,7 +11,7 @@ server_t server = {0};
 new_http_server(&server, "0.0.0.0", "80");
 ```
 
-Após isso, a variável `server` conterá informações que descrevem seu servidor. O próximo passo será usar a função `handle_route` para mapear rotas para seus respectivos handlers.
+Após isso, a variável `server` conterá informações que descrevem seu servidor. O próximo passo será usar a função `handle_route`, que mapeia rotas para suas respectivas funções handlers. Nesses handlers você pode programar toda a resposta que será enviada ao cliente.
 
 ```C
 // handler do caminho /home
@@ -35,7 +35,7 @@ Ao requisitar o recurso contido em /home, a mensagem "Olá mundo!" será retorna
 start_listening(&server);
 ```
 
-Por padrão cada requisição é tratada por um processo separado, ou seja, um `fork` é realizado sempre que uma requisição nova chega. Essa característica do servidor pode ser alterada para que ele use threads, para isso é preciso chamar a função `config_threaded_server` antes de `start_listening`.
+Por padrão, cada requisição é tratada por um processo separado, ou seja, um `fork` é realizado sempre que uma requisição nova chega. Essa característica do servidor pode ser alterada para que ele use threads, para isso é preciso chamar a função `config_threaded_server` antes de `start_listening`.
 
 ```C
 // configura o servidor para que utilize threads ao invés de processos
@@ -56,5 +56,39 @@ if( (err = new_http_server(&server, "0.0.0.0", "http")) != 0) {
   // ex.: "new_http_server: não foi possível atribuir nenhum endereço ao servidor"
   http_error("new_http_server", err);
   return EXIT_FAILURE;
+}
+```
+
+## Exemplo completo de código
+
+```C
+void home(response_t* resp, request_t* req) {
+  add_header_field(&resp->header, "Content-Type", "application/xml");
+
+  int err = send_http_response(resp, "<person><name>Gabriel</name><age>20</age></person>");
+  if(err != 0)
+    http_error("send_http_response", err);
+}
+
+int main() {
+  int err = 0;
+  server_t server = {0};
+  
+  if( (err = new_http_server(&server, "0.0.0.0", "http")) != 0) {
+    http_error("new_http_server", err);
+    return EXIT_FAILURE;
+  }
+
+  config_threaded_server(&server, 20);
+
+  if( (err = handle_route(&server, "/home", home, GET)) != 0)
+    http_error("handle_route", err);
+
+  if( (err = start_listening(&server)) != 0) {
+    http_error("start_listening", err);
+    return EXIT_FAILURE;
+  }
+
+  return 0;
 }
 ```
