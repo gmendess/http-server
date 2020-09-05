@@ -143,26 +143,23 @@ const char* get_server_error_code_description(int index) {
   @param status_code: código de status HTTP(ver http_status_code_t)
 */
 const char* get_http_status_description(http_status_code_t status_code) {
-  if(status_code == 0)
+  if(status_code <= 0)
     return NULL;
 
   int status_family = status_code / 100;
-
   int index = status_code % 100;
-  if(index < 0)
-    return NULL;
 
   switch(status_family) {
     case 1:  // 1xx (Informacional)
-      return get_info_code_description(index);            break;
+      return get_info_code_description(index);
     case 2:  // 2xx (Sucesso)
-      return get_success_code_description(index);         break;
+      return get_success_code_description(index);
     case 3:  // 3xx (Redirecionamento)
-      return get_redirection_code_description(index);     break;
+      return get_redirection_code_description(index);
     case 4:  // 4xx (Erro no cliente)
-      return get_client_error_code_description(index);    break;
+      return get_client_error_code_description(index);
     case 5:  // 5xx (Erro no servidor)
-      return get_server_error_code_description(index);    break;
+      return get_server_error_code_description(index);
     default: // família de código inválida
       return NULL;
   }
